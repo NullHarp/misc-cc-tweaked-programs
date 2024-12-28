@@ -1,0 +1,14 @@
+[
+    {
+        "target":"minecraft:iron_ore",
+        "targetY":15,
+        "offsetPos":{"x":0,"y":0,"z":0},
+        "status":"queued"
+    },
+    {
+        "target":"minecraft:coal_ore",
+        "targetY":30,
+        "offsetPos":{"x":0,"y":0,"z":0},
+        "status":"queued"
+    }
+]

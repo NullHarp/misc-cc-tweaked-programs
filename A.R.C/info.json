@@ -1,0 +1,98 @@
+[
+    {
+        "name":"aimbot.lua",
+        "version":"V0.1.0",
+        "description":"Program to automatically aim and attack target. Ex: aimbot NullHarp",
+        "location":"main"
+    },
+    {
+        "name":"autoclicker.lua",
+        "version":"V0.1.0",
+        "description":"Program that rapidly attacks wherever you look.",
+        "location":"main"
+    },
+    {
+        "name":"fly.lua",
+        "version":"V0.1.0",
+        "description":"Input a impulse strength, shift to boost, space to jump-boost.",
+        "location":"main"
+    },
+    {
+        "name":"follow.lua",
+        "version":"V0.1.0",
+        "description":"follow a target Ex: follow 0.5 NullHarp.",
+        "location":"main"
+    },
+    {
+        "name":"health.lua",
+        "version":"V0.1.0",
+        "description":"Tells you how much damage you took in the last tick.",
+        "location":"main"
+    },
+    {
+        "name":"hover.lua",
+        "version":"V0.1.0",
+        "description":"Hover at a specified Y-Level Ex: hover 60",
+        "location":"main"
+    },
+    {
+        "name":"insane.lua",
+        "version":"V0.1.0",
+        "description":"Projects a custom build using a specified custom json Ex: insane house.json",
+        "location":"main"
+    },
+    {
+        "name":"kill.lua",
+        "version":"V0.1.0",
+        "description":"R.A.I.D System Ex: kill 0.5 NullHarp",
+        "location":"main"
+    },
+    {
+        "name":"laser.lua",
+        "version":"V0.1.0",
+        "description":"Laser aimbot, Ex: laser NullHarp",
+        "location":"main"
+    },
+    {
+        "name":"look.lua",
+        "version":"V0.1.0",
+        "description":"Forcibly look at a target, Ex: look NullHarp",
+        "location":"main"
+    },
+    {
+        "name":"metatrack.lua",
+        "version":"V0.1.0",
+        "description":"Experimental program to receive json format projected builds",
+        "location":"main"
+    },
+    {
+        "name":"metaverse.lua",
+        "version":"V0.1.0",
+        "description":"Experimental program to send json format projected builds",
+        "location":"main"
+    },
+    {
+        "name":"scan.lua",
+        "version":"V0.1.0",
+        "description":"Scans a inputed raidus and coverts it to a projectable json format, Ex: scan 4",
+        "location":"main"
+    },
+    {
+        "name":"sFly.lua",
+        "version":"V0.1.0",
+        "description":"Like fly.lua but with a multipled boost power, Ex: sFly 0.5",
+        "location":"main"
+    },
+    {
+        "name":"track.lua",
+        "version":"V0.1.0",
+        "description":"tracks all entities in nearby area, marks with color and text threw walls.",
+        "location":"main"
+    },
+    {
+        "name":"transport.lua",
+        "version":"V0.1.0",
+        "description":"Experimental program to fly to any x y z coordinate, Ex: transport 100 100 100",
+        "location":"main"
+    }
+]

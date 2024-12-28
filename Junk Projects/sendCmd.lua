@@ -1,0 +1,1 @@
+local ws,error = http.websocket("ws://24.127.222.131:5000") local msg = ... local cmd = {id = "12",type = "function",msg = ""} cmd.msg = msg ws.send(textutils.serialiseJSON(cmd)) ws.close()
