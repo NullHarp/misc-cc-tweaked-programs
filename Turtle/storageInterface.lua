@@ -4,6 +4,17 @@ local button = require("buttonAPI")
 local util = require("util")
 local storage = require("storageAPI")
 
+local craftingService = false
+local smeltingService = false
+local finerPeripheralsServices = {
+    holographicService = false
+}
+
+local holopgraph
+if finerPeripheralsServices.holographicService then
+    holopgraph = peripheral.find("holographic_item_display")
+end
+
 local shuttingDown = false
 
 local version = "V0.1.0"
@@ -12,6 +23,7 @@ util.title("S.T.A.C.K",version)
 
 ---Modem used to comunicate with services on the local network, and to get the turtles local name
 local modem = peripheral.find("modem")
+--Opens channel 255 for comunication with services
 modem.open(255)
 
 local ignored = {"minecraft:chest_2","minecraft:chest_3","minecraft:chest_1"}
@@ -54,8 +66,10 @@ menuUI.setVisible(false)
 local menuSizeX, menuSizeY = menuUI.getSize()
 
 ---Creates the buttons for the overlay UI for extracting / smelting items
-button.newButton(menuUI,1,menuSizeY,"Request","request",colors.white,colors.black,colors.lightGray)
-button.newButton(menuUI,menuSizeX-4,menuSizeY, "Smelt", "smelt", colors.white,colors.black,colors.lightGray)
+button.newButton(menuUI,"main",1,menuSizeY,"Request","request",colors.white,colors.black,colors.lightGray)
+if smeltingService then
+    button.newButton(menuUI,"main",menuSizeX-4,menuSizeY, "Smelt", "smelt", colors.white,colors.black,colors.lightGray)
+end
 
 local craftButtonMinX = 0
 local craftButtonMaxX = 0
@@ -109,7 +123,7 @@ local function drawMenu()
         menuUI.write(inputCount)
     end
     menuUI.setBackgroundColor(colors.white)
-    button.drawButtons(pressedButton)
+    button.drawButtons("main",pressedButton)
 end
 
 ---Draws the background for the main UI
@@ -193,8 +207,8 @@ local function clickLoop()
     while not shuttingDown do
         pressedButton = ""
         local event, bt, x, y = os.pullEvent("mouse_click")
-        pressedButton = button.processButtons(x,y)
-        if y == 1 and x >= craftButtonMinX and x <= craftButtonMaxX and not inMenu then
+        pressedButton = button.processButtons(x,y,"main")
+        if y == 1 and x >= craftButtonMinX and x <= craftButtonMaxX and not inMenu and craftingService then
             if craftMode then
                 craftMode = false
             else
@@ -217,7 +231,7 @@ local function clickLoop()
         elseif inMenu then
             if pressedButton == "smelt" then
                 -- Smelt button
-                if type(tonumber(inputCount)) ~= "nil" then
+                if type(tonumber(inputCount)) ~= "nil" and smeltingService then
                     storage.exportItems(furnace_intake,selected_item_name,tonumber(inputCount))
                 end
             elseif pressedButton == "request" then
@@ -275,7 +289,7 @@ local function selectionLoop()
                         offset = offset - 1
                     end
                 elseif arg1 == keys.enter then
-                    if craftMode then
+                    if craftMode and craftingService then
                         modem.transmit(255,255,{type="queueRecipe",recipe_name=selected_item_name,count=1})
                     else
                         inMenu = true
@@ -405,7 +419,7 @@ end
 ---Manages displaying of the UI and makes sure everything is visible correctly
 local function displayLoop()
     while not shuttingDown do
-        button.drawButtons(pressedButton)
+        button.drawButtons("main",pressedButton)
         if input ~= old_input or selection ~= old_selection or inputCount ~= old_inputCount then
             drawBackground()
             if craftMode then
@@ -436,11 +450,26 @@ local function displayLoop()
     end
 end
 
+local function serviceHandler()
+    local old_selected_item_name = "123"
+    while true do
+        if finerPeripheralsServices.holographicService then
+            if holopgraph.getOperationCooldown() == 0 then
+                if selected_item_name ~= old_selected_item_name then
+                    holopgraph.setItem(selected_item_name)
+                end
+                old_selected_item_name = selected_item_name
+            end
+        end
+        sleep(0)
+    end
+end
+
 drawBackground()
 drawResults(bubble.sort(results))
 
 ---Activates the core runtime loops
-parallel.waitForAny(displayLoop,selectionLoop,clickLoop,refreshLoop,importLoop,inventoryUpdateLoop)
+parallel.waitForAny(displayLoop,selectionLoop,clickLoop,refreshLoop,importLoop,inventoryUpdateLoop,serviceHandler)
 term.setBackgroundColor(colors.black)
 term.setTextColor(colors.white)
 shell.run("clear")

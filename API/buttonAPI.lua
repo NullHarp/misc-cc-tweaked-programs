@@ -3,6 +3,7 @@ local buttons = {}
 
 ---Creates a new button using the specified paramaters
 ---@param terminal table What terminal should the button be parented to (Ex: term.native())
+---@param button_group string What button group to use
 ---@param startX integer Where should the button start on the x axis
 ---@param startY integer Where should the button start on the y axis
 ---@param label string The label is what is shown on the button
@@ -13,7 +14,10 @@ local buttons = {}
 ---@param isToggle? boolean Should the button act like a lever, or like a button
 ---@param width? integer How wide should the button be
 ---@param height? integer How tall should the button be
-local function newButton(terminal,startX,startY,label,id,bgColor,textColor,bgColorPressed,isToggle,width,height)
+local function newButton(terminal,button_group,startX,startY,label,id,bgColor,textColor,bgColorPressed,isToggle,width,height)
+    if type(buttons[button_group]) == "nil" then
+        buttons[button_group] = {}
+    end
     width = width or #label
     height = height or 0
     bgColor = bgColor or colors.white
@@ -32,17 +36,18 @@ local function newButton(terminal,startX,startY,label,id,bgColor,textColor,bgCol
         bgColorPressed = bgColorPressed,
         textColor = textColor,
         isToggle = isToggle,
-        toggled = false,
+        pressed = false,
     }
-    table.insert(buttons,data)
+    table.insert(buttons[button_group],data)
 end
 
 ---Draws all the created button objects with an optional specifer for a button id to "press" that button
+---@param button_group string
 ---@param pressed_button_id? string Id that was provided on button creation, this is the button that will be pressed (or toggled depending on params)
-local function drawButtons(pressed_button_id)
+local function drawButtons(button_group,pressed_button_id)
     local old_term = term.native()
     pressed_button_id = pressed_button_id or ""
-    for i,button in pairs(buttons) do
+    for i,button in pairs(buttons[button_group]) do
         local terminal = button.terminal
 
         if button.id == pressed_button_id or button.toggled then
@@ -65,12 +70,13 @@ end
 ---Processes all the created button objects with an optional terminal object specifier
 ---@param x integer What x character was clicked
 ---@param y integer What y character was clicked
+---@param button_group string String representing the button group to get
 ---@param terminal? table terminal object like term.native() or a monitor, used as a filter
 ---@return string buttonId Id that was provided on button creation
 ---@return table buttonTerminal terminal object like term.native() or a monitor
-local function processButtons(x,y,terminal)
+local function processButtons(x,y,button_group,terminal)
     local specificTerminal = not not terminal
-    for i,button in pairs(buttons) do
+    for i,button in pairs(buttons[button_group]) do
         local isVisible = true
         ---offset representing window -> native terminal coordinate on x axis
         local offsetX = 0
@@ -89,9 +95,15 @@ local function processButtons(x,y,terminal)
         x = x - offsetX
         if isVisible and y >= button.minY and y <= button.maxY and x >= button.minX and x <= button.maxX and (terminal == button.terminal or not specificTerminal) then
             if button.isToggle then
-                button.toggled = not button.toggled
+                button.pressed = not button.pressed
+            else
+                button.pressed = true
             end
             return button.id, button.terminal
+        else
+            if not button.isToggle then
+                button.pressed = false
+            end
         end
         y = old_y
         x = old_x
@@ -99,10 +111,11 @@ local function processButtons(x,y,terminal)
 end
 
 ---Gets a button using the provided button id
+---@param button_group string String representing the button group to get
 ---@param button_id string Id that was provided on button creation
 ---@return table buttonData Button data based off the paramaters given to newButton
-local function getButton(button_id)
-    for i,button in pairs(buttons) do
+local function getButton(button_group,button_id)
+    for i,button in pairs(buttons[button_group]) do
         if button.id == button_id then
             return button
         end
@@ -112,8 +125,8 @@ end
 ---Deletes a button using the provided button id
 ---@param button_id string Id that was provided on button creation
 ---@return boolean success Did we successfully delete the button
-local function deleteButton(button_id)
-    for i, button in pairs(buttons) do
+local function deleteButton(buttonGroup,button_id)
+    for i, button in pairs(buttons[buttonGroup]) do
         if button.id == button_id then
             table.remove(buttons,i)
             return true

@@ -301,7 +301,7 @@ end
 ---@param item_name string Valid item name
 ---@param count? integer Count (defaults to 64)
 ---@param toSlot? integer The Slot to export to (defaults to 1)
-local function exportItems(toChest, item_name, count,toSlot)
+local function exportItems(toChest, item_name, count, toSlot)
     count = count or 64
     toSlot = toSlot or 1
     local success, item_data = findItem(item_name,count)
