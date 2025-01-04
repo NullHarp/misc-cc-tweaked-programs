@@ -6,19 +6,20 @@
 ---@param current number
 ---@return table
 local function makePID(setKp,setKi,setKd,target,current)
-    local pidData = {
+    current = current or 0
+    setKp = setKp or 0.1
+    setKi =  setKi or 0.1
+    setKd = setKd or 0.1
+    local data = {
         Kp = setKp,
         Ki = setKi,
         Kd = setKd,
         last_error = 0,
         integral = 0,
-        current = 0,
+        current = current,
         target = target
     }
-    if pidData.current ~= nil  then
-        pidData.current = current
-    end
-    return pidData
+    return data
 end
 
 ---Takes in PID data and outputs the computed PID signal based off the provided data

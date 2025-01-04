@@ -86,17 +86,18 @@ end
 ---@param size integer
 ---@param main_color integer
 ---@param secondary_color integer
-local function progressBar(posX,posY,value,max_value,size,main_color,secondary_color)
+local function progressBar(posX,posY,value,max_value,size,main_color,secondary_color,terminal)
+    terminal = terminal or term.native()
     local normalized_value = (value/max_value)*size
     local remain = size-normalized_value
     local old_color = term.getTextColor()
-    term.setCursorPos(posX,posY)
-    term.setTextColor(main_color)
-    term.write(string.rep("\149",normalized_value))
-    term.setTextColor(secondary_color)
-    term.write(string.rep("\149",remain))
-    term.setTextColor(old_color)
-    term.setCursorPos(1,posY+1)
+    terminal.setCursorPos(posX,posY)
+    terminal.setTextColor(main_color)
+    terminal.write(string.rep("\149",normalized_value))
+    terminal.setTextColor(secondary_color)
+    terminal.write(string.rep("\149",remain))
+    terminal.setTextColor(old_color)
+    terminal.setCursorPos(1,posY+1)
 end
 
 return {getLabel = getLabel, title = title,calculateYawPitch = calculateYawPitch, prettyPrintJSON = prettyPrintJSON, progressBar = progressBar}
