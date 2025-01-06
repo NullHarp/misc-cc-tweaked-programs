@@ -22,7 +22,6 @@ local function selectItem(item_name)
     return false
 end
 
-
 local function findBet()
     local foundBet = false
     while not foundBet do
