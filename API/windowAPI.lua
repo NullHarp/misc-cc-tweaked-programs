@@ -2,7 +2,7 @@ local buttoner = require("buttonAPI")
 
 local windows_objects = {}
 
-local function newWindow(terminal, startX, startY, width, height, startVisible, windowId)
+local function  createWindow(terminal, drawFunc, startX, startY, width, height, startVisible, windowId)
     local win = window.create(terminal, startX, startY, width, height, startVisible)
     local windowData = {
         terminal = win,
@@ -33,21 +33,7 @@ local function drawWindows(hasButtons,currentWindow,currentButton)
     currentWindow = currentWindow or ""
     currentButton = currentButton or ""
     for windowID, windowData in pairs(windows_objects) do
-        local win = windowData.terminal
-        win.setBackgroundColor(colors.white)
-        win.clear()
-        win.setBackgroundColor(colors.lightGray)
-        win.setCursorPos(1, 1)
-        win.clearLine()
-        win.write(windowID)
-        win.setBackgroundColor(colors.lightGray)
-        if hasButtons then
-            if currentWindow == windowID then
-                buttoner.drawButtons(windowID,currentButton)
-            else
-                buttoner.drawButtons(windowID)
-            end
-        end
+        windowData.drawFunc(windowData)
     end
 end
 
@@ -63,4 +49,4 @@ local function updateWindow(windowID,windowData)
     windows_objects[windowID] = windowData
 end
 
-return {moveWindow = moveWindow, newWindow = newWindow, drawWindows = drawWindows, getWindows = getWindows,getWindow = getWindow, updateWindow = updateWindow}
+return {moveWindow = moveWindow, createWindow = createWindow, drawWindows = drawWindows, getWindows = getWindows,getWindow = getWindow, updateWindow = updateWindow}
