@@ -145,10 +145,10 @@ local function updateOnlineState()
     local tempOffset = 444.7
 
     ---Caclulates the exponential temperature rise
-    local tempRiseExpo = (negCSat * negCSat * negCSat) / (100 - negCSat) + tempOffset
+    local tempRiseExpo = (negCSat^3) / (100 - negCSat) + tempOffset
 
     ---Calculates the resistance that naturally occurs with higher temp
-    local tempRiseResist = (temp50 * temp50 * temp50 * temp50) / (100 - temp50)
+    local tempRiseResist = (temp50^4) / (100 - temp50)
 
     ---Caclulates the rise of the temperature based off the resistance, conversion level, and exponential temperature rise
     local riseAmount = (tempRiseExpo - (tempRiseResist * (1.0 - convLVL)) + convLVL * 1000) / 10000
@@ -301,31 +301,23 @@ local function removeEnergy(energy)
     end
 end
 
----Gets the current state of the reactor
----@return string reactor_state
-local function getReactorState()
-    return reactorState
-end
-
----Gets reactor data
+---Gets reactor info
 ---@return table data Data associated with the reactor, such as sat and shield
-local function getData()
+local function getReactorInfo()
     local data = {
-        saturation = saturation,
-        maxSaturation = maxSaturation,
-        shieldCharge = shieldCharge,
-        maxShieldCharge = maxShieldCharge,
         temperature = temperature,
+        fieldStrength = shieldCharge,
+        maxFieldStrength = maxShieldCharge,
+        energySaturation = saturation,
+        maxEnergySaturation = maxSaturation,
+        fuelConversion = convertedFuel,
+        maxFuelConversion = reactableFuel+convertedFuel,
         generationRate = generationRate,
-        fieldInputRate = fieldInputRate
+        fieldDrainRate = fieldInputRate,
+        fuelConversionRate = fuelUseRate,
+        status = reactorState
     }
     return data
-end
-
----Gets the amount of remaining reactable fuel
----@return number
-local function getFuel()
-    return reactableFuel
 end
 
 ---Sets the amount of reactable fuel
@@ -333,8 +325,28 @@ local function setFuel(fuel)
     reactableFuel = fuel
 end
 
+local intake = {}
+local outlet = {}
+
+function intake.setOverrideEnabled(state)
+    ---Filler function to keep parity with normal reactor
+end
+
+function intake.setFlowOverride(integer)
+    injectEnergy(integer)
+end
+
+function outlet.setOverrideEnabled(state)
+    ---Filler function to keep parity with normal reactor
+end
+
+function outlet.setFlowOverride(integer)
+    removeEnergy(integer)
+end
+
 return {
-    getFuel = getFuel,
+    intake = intake,
+    outlet = outlet,
     setFuel = setFuel,
     attemptInit = attemptInit,
     canActivate = canActivate,
@@ -343,9 +355,6 @@ return {
     activateReactor = activateReactor,
     chargeReactor = chargeReactor,
     shutdownReactor = shutdownReactor,
-    injectEnergy = injectEnergy,
-    removeEnergy = removeEnergy,
     updateCoreLogic = updateCoreLogic,
-    getReactorState = getReactorState,
-    getData = getData,
+    getReactorInfo = getReactorInfo,
 }

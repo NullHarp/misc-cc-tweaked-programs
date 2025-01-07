@@ -1,4 +1,7 @@
 local reactor = require("reactor")
+
+local flow_gate_intake = reactor.intake
+local flow_gate_outlet = reactor.outlet
 local pid = require("PID")
 
 local fuelBlocks = 8
@@ -10,15 +13,17 @@ local energyReserve = 1000000000
 local injectionRate = 1000000
 local extractionRate = 0
 
-local targetShield = 35
+local targetShield = 60
 local targetSaturation = 20
+local targetTemperature = 7000
 
-local injectionPid = pid.makePID(0.001,0.001,0.4,targetShield*1000000,0)
-local extractionPid = pid.makePID(0.003,0.1,0.4,targetSaturation*10000000,0)
+local injectionPid = pid.makePID(0.001,0.01,0.05,targetShield*1000000,0)
+local extractionPid = pid.makePID(0.003,0.1,0.05,targetSaturation*10000000,0)
+local temperaturePid = pid.makePID(0.006,0.1,0.05,targetTemperature,20)
 
 local isNetPositive = false
 
-local speedMode = false
+local speedMode = true
 
 local time = os.clock()
 local endTime = time
@@ -108,30 +113,31 @@ end
 local function draw(data)
     term.clear()
     term.setCursorPos(1,1)
-    printState("State:",reactor.getReactorState())
-    print()
+    local rFuel, cFuel = data.maxFuelConversion - data.fuelConversion, data.fuelConversion
+    printState("State:",data.status)
+    print(((cFuel / (cFuel+rFuel)) * 1.3) - 0.3)
     printTemp("Temp:",math.floor(data.temperature))
     print()
-    print("Sat:",tostring(roundDecimal(data.saturation/data.maxSaturation,100)*100).."%")
-    print("Sat:",math.floor(data.saturation))
-    --print("Max Sat:",math.floor(data.maxSaturation))
+    print("Sat:",tostring(roundDecimal(data.energySaturation/data.maxEnergySaturation,100)*100).."%")
+    print("Sat:",math.floor(data.energySaturation))
+    --print("Max Sat:",math.floor(data.maxEnergySaturation))
     print()
-    print("Shield:",tostring(roundDecimal(data.shieldCharge/data.maxShieldCharge,100)*100).."%")
-    print("Shield:",math.floor(data.shieldCharge))
-    --print("Max Shield:",math.floor(data.maxShieldCharge))
+    print("Shield:",tostring(roundDecimal(data.fieldStrength/data.maxFieldStrength,100)*100).."%")
+    print("Shield:",math.floor(data.fieldStrength))
+    --print("Max Shield:",math.floor(data.maxFieldStrength))
     print()
-    print("Field Input Rate:",math.floor(data.fieldInputRate))
+    print("Field Input Rate:",math.floor(data.fieldDrainRate))
     print("Generation Rate:",math.floor(data.generationRate))
     print("Injection Rate:",math.floor(injectionRate))
     print("Extraction Rate:",math.floor(extractionRate))
     print()
     printBool("Is Net Positive:",isNetPositive)
     print("Net Output:",math.floor(extractionRate-injectionRate))
-    print()
-    term.write("Total Energy: "..tostring(math.floor(energyReserve/1000000)).." MrF "..tostring(tick))
+    print(tostring(math.floor(tick/20/60/60*100)/100).." hours")
+    term.write("Total Energy: "..tostring(math.floor(energyReserve/1000000)).." MrF ")
 end
 
-local data = reactor.getData()
+local data = reactor.getReactorInfo()
 
 reactor.setFuel(fuelNuggets * 16)
 draw(data)
@@ -147,9 +153,11 @@ local safteyShutdown = false
 while true do
     time = os.clock()
     reactor.updateCoreLogic()
-    data = reactor.getData()
-    reactor.injectEnergy(extractEnergy(injectionRate))
-    insertEnergy(reactor.removeEnergy(extractionRate))
+    data = reactor.getReactorInfo()
+    flow_gate_intake.setFlowOverride(injectionRate)
+    extractEnergy(injectionRate)
+    flow_gate_outlet.setFlowOverride(extractionRate)
+    insertEnergy(extractionRate)
     if injectionRate > extractionRate then
         isNetPositive = false
     else
@@ -160,36 +168,48 @@ while true do
         injectionRate = 500000
         extractionRate = 0
     end
-    if reactor.getReactorState() == "RUNNING" or reactor.getReactorState() == "STOPPING" then
+    if data.status == "RUNNING" or data.status == "STOPPING" then
         -- Update PID inputs
-        injectionPid.current = data.shieldCharge
-        extractionPid.current = data.saturation
-        
+        injectionPid.current = data.fieldStrength
+        extractionPid.current = data.energySaturation
+        temperaturePid.current = data.temperature
         -- Get PID outputs
         local resInj = pid.PID(injectionPid)
         local resExt = pid.PID(extractionPid)
+        local resSat = pid.PID(temperaturePid)
+
+        extractionPid.target = math.min(math.max(extractionPid.target - resSat*100, 10*10000000), 96*10000000)
     
         injectionRate = math.max(injectionRate + resInj, 0)
-        if reactor.getReactorState() == "STOPPING" then
+        if data.status == "STOPPING" then
             extractionRate = 0
         else
             extractionRate = math.max(extractionRate - resExt, 0)
         end
     end
-    if reactor.getReactorState() == "BEYOND_HOPE" then
+    if data.status == "BEYOND_HOPE" then
         draw(data)
         error()
     end
-    if data.temperature > 8500 then
+    local rFuel, cFuel = data.maxFuelConversion - data.fuelConversion, data.fuelConversion
+    local tFuel = data.maxFuelConversion
+    local convLVL = ((cFuel / tFuel) * 1.3) - 0.3
+
+    if convLVL > 0.95 then
         safteyShutdown = true
         reactor.shutdownReactor()
+    end
+
+    if safteyShutdown and data.status == "COLD" then
+        draw(data)
+        error()
     end
     
     if speedMode then
         if time >= endTime then
             draw(data)
             sleep(0)
-            endTime = time+0.5
+            endTime = time+2
         end
     else
         draw(data)
