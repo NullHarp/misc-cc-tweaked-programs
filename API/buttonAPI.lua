@@ -19,7 +19,7 @@ local function newButton(terminal,button_group,startX,startY,label,id,bgColor,te
         buttons[button_group] = {}
     end
     width = width or #label
-    height = height or 0
+    height = height or 1
     bgColor = bgColor or colors.white
     bgColorPressed = bgColorPressed or bgColor
     textColor = textColor or colors.black
@@ -31,7 +31,7 @@ local function newButton(terminal,button_group,startX,startY,label,id,bgColor,te
         minX = startX,
         minY = startY,
         maxX = startX+width-1,
-        maxY = startY+height,
+        maxY = startY+height-1,
         bgColor = bgColor,
         bgColorPressed = bgColorPressed,
         textColor = textColor,
