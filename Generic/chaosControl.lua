@@ -86,7 +86,7 @@ local function draw(data)
     term.clear()
     term.setCursorPos(1,1)
     local rFuel, cFuel = data.maxFuelConversion - data.fuelConversion, data.fuelConversion
-    printState("State:",data.status)
+    printState("State:",string.upper(data.status))
     print(((cFuel / (cFuel+rFuel)) * 1.3) - 0.3)
     printTemp("Temp:",math.floor(data.temperature))
     print()
@@ -116,7 +116,7 @@ while true do
     else
         isNetPositive = true
     end
-    if data.status == "RUNNING" or data.status == "STOPPING" then
+    if data.status == "running" or data.status == "stopping" then
         -- Update PID inputs
         injectionPid.current = data.fieldStrength
         extractionPid.current = data.energySaturation
@@ -129,12 +129,12 @@ while true do
         extractionPid.target = math.min(math.max(extractionPid.target - resSat*100, 10*10000000), 96*10000000)
     
         injectionRate = math.max(injectionRate + resInj, 0)
-        if data.status == "STOPPING" then
+        if data.status == "stopping" then
             extractionRate = 0
         else
             extractionRate = math.max(extractionRate - resExt, 0)
         end
-    elseif data.status == "BEYOND_HOPE" then
+    elseif data.status == "beyond_hope" then
         draw(data)
         error("You might want to run now!")
     end
@@ -145,9 +145,10 @@ while true do
     if convLVL > 0.95 and not safteyShutdown then
         safteyShutdown = true
         reactor.shutdownReactor()
-    elseif safteyShutdown and data.status == "COLD" then
+    elseif safteyShutdown and data.status == "cold" then
         draw(data)
         error("Saftey shutdown complete, exiting.")
     end
+    draw(data)
     sleep(0)
 end

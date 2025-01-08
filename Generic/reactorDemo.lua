@@ -154,6 +154,7 @@ while true do
     time = os.clock()
     reactor.updateCoreLogic()
     data = reactor.getReactorInfo()
+    data.status = string.upper(data.status)
     flow_gate_intake.setFlowOverride(injectionRate)
     extractEnergy(injectionRate)
     flow_gate_outlet.setFlowOverride(extractionRate)

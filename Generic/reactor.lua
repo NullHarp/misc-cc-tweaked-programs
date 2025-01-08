@@ -315,7 +315,7 @@ local function getReactorInfo()
         generationRate = generationRate,
         fieldDrainRate = fieldInputRate,
         fuelConversionRate = fuelUseRate,
-        status = reactorState
+        status = string.lower(reactorState)
     }
     return data
 end
