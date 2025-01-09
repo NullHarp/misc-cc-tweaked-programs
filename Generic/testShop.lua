@@ -2,6 +2,7 @@ local shoppy = require("shoppy")
 
 local monitor = peripheral.wrap("top")
 
+shoppy.setCurrencey("numismatic-overhaul:silver_coin")
 shoppy.setShopMonitor(monitor)
 shoppy.addItem("minecraft:dirt",4,1)
 shoppy.constructShop()

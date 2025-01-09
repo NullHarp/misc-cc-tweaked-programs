@@ -1,6 +1,6 @@
 local lev = require("levenshteinDistance")
 
-local chest_types = {"minecraft:chest","sc-goodies:diamond_chest"}
+local chest_types = {"minecraft:chest","sc-goodies:iron_chest","sc-goodies:gold_chest","sc-goodies:diamond_chest"}
 
 local chests = {}
 local chest_names = {}
@@ -96,7 +96,7 @@ local function indexChests()
     for i1 = 1, #chest_types do
         for i,v in pairs(table.pack(peripheral.find(chest_types[i1]))) do
             if type(v) ~= "number" then
-                if type(ignore_chests[peripheral.getName(v)]) == "nil" then
+                if type(ignore_chests[peripheral.getName(v)]) == "nil" and type(import_chests[peripheral.getName(v)]) == "nil" then
                     table.insert(chests,v)
                 end
             end
@@ -301,33 +301,50 @@ end
 ---@param item_name string Valid item name
 ---@param count? integer Count (defaults to 64)
 ---@param toSlot? integer The Slot to export to (defaults to 1)
+---@return boolean success Did the operation succede
 local function exportItems(toChest, item_name, count, toSlot)
     count = count or 64
     toSlot = toSlot or 1
-    local success, item_data = findItem(item_name,count)
-    if success then
-        local transferCount = chests[item_data.chest_index].pushItems(toChest,item_data.slot,count,toSlot)
-        if transferCount == 0 then
-            transferCount = chests[item_data.chest_index].pushItems(toChest,item_data.slot,count)
-        end
-        for i = #item_index, 1, -1 do
-            local item = item_index[i]
-            if item_data.chest == item.chest and item_data.chest_index == item.chest_index and item_data.slot == item.slot and item_data.count == item.count then
-                item.count = item.count - transferCount
-                itemCounts[item.name] = itemCounts[item.name] - transferCount
-                if item.count == 0 then
-                    table.remove(item_index,i)
-                elseif item.count < 0 then
-                    table.remove(item_index,i)
-                    break
-                else
-                    item_index[item.name] = item.count
-                end
-                return true
+    local toTransfer = count
+    for i = #item_index, 1, -1 do
+        local item = item_index[i]
+        if item.name == item_name then
+            local offset = item_index[i].count - toTransfer
+            local transfer = 0
+            if offset < 0 then
+                transfer = item_index[i].count
+            else
+                transfer = toTransfer
+            end
+            local transferCount = chests[item_index[i].chest_index].pushItems(toChest,item_index[i].slot,transfer,toSlot)
+            if transferCount == 0 then
+                transferCount = chests[item_index[i].chest_index].pushItems(toChest,item_index[i].slot,transfer)
+            end
+            itemCounts[item.name] = itemCounts[item.name] - transferCount
+            if item_index[i].count <= toTransfer then
+                toTransfer = toTransfer - item_index[i].count
+                item_index[i].count = 0
+            else
+                item_index[i].count = item_index[i].count - toTransfer
+                toTransfer = 0
+            end
+            if item_index[i].count == 0 then
+                table.remove(item_index,i)
+            elseif item_index[i].count < 0 then
+                table.remove(item_index,i)
+                break
+            else
+                item_index[item.name] = item.count
+            end
+            if toTransfer <= 0 then
+                break
             end
         end
-    else
+    end
+    if toTransfer > 0 then
         return false
+    else
+        return true
     end
 end
 
@@ -335,15 +352,16 @@ end
 local function importFromChests()
     local success,output, slots = findAvaliableChest()
     local avaliableSlots = slots
-    for i = 1, #import_chests do
-        local list = peripheral.call(import_chests[i],"list")
+    for i,v in pairs(import_chests) do
+        local chest = peripheral.wrap(i)
+        local list = chest.list()
         for slot, item in pairs(list) do
             if avaliableSlots == 0 then
                 success,output, slots = findAvaliableChest()
             end
             if success then
                 avaliableSlots = avaliableSlots - 1
-                importItems(import_chests[i],slot,item.count)
+                importItems(i,slot,item.count)
             end
         end
     end

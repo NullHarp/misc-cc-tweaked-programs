@@ -18,7 +18,15 @@ local insertedFunds = 0
 local pressedBuyButton = ""
 local pressedFundsButton = ""
 
+local currencey = ""
+
 local isShopInitialized = false
+
+---Configures what currencey type to use for the shop
+---@param item_name string Item id of currencey, ex numismatic-overhaul:gold_coin
+local function setCurrencey(item_name)
+    currencey = item_name
+end
 
 ---Internal helper function for finding items
 ---@param item_name string In the format of a minecraft id, ex minecraft:dirt
@@ -119,7 +127,7 @@ local function processBuy()
             if pressedFundsButton ~= "" then
                 drawShop()
                 if pressedFundsButton == "exportMoney" then
-                    local success = storage.exportItems(turtle_name,"numismatic-overhaul:gold_coin",insertedFunds,1)
+                    local success = storage.exportItems(turtle_name,currencey,insertedFunds,1)
                     if success then
                         importBlock = true
                         turtle.select(1)
@@ -146,7 +154,7 @@ local function processFunds()
         for i = 1, 16 do
             local itemData = turtle.getItemDetail()
             if type(itemData) ~= "nil" then
-                if itemData.name ~= "numismatic-overhaul:gold_coin" then
+                if itemData.name ~= currencey then
                     turtle.select(i)
                     turtle.drop()
                 else
@@ -181,6 +189,7 @@ end
 --parallel.waitForAll(processBuy,processFunds)
 
 return {
+    setCurrencey = setCurrencey,
     setShopMonitor = setShopMonitor,
     addItem = addItem,
     getItems = getItems,

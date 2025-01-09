@@ -26,9 +26,12 @@ local modem = peripheral.find("modem")
 --Opens channel 255 for comunication with services
 modem.open(255)
 
-local ignored = {"minecraft:chest_2","minecraft:chest_3","minecraft:chest_1"}
+local ignored = {"sc-goodies:iron_chest_2"}
+local import = {"minecraft:chest_1"}
 print("Configuring ignored chests.")
 storage.setIgnoredChests(ignored)
+print("Configuring import chests.")
+storage.setImportChests(import)
 print("Checking if display name index exists.")
 if not storage.loadDisplayNames() then
     print("Could not find display name index, manually indexing.")
@@ -58,6 +61,8 @@ local old_inputCount = "1"
 local pressedButton = ""
 
 local sizeX, sizeY = term.getSize()
+
+local slotLock = false
 
 ---The overlay UI used for extracting and smelting items
 local menuUI = window.create(term.native(),5,3,sizeX-8,sizeY-4)
@@ -107,11 +112,11 @@ local function drawMenu()
     menuUI.clearLine()
     menuUI.write("Interaction")
     if type(storage.getDisplayName(selected_item_name)) ~= "nil" then
-        menuUI.setCursorPos(menuSizeX-#storage.getDisplayName(selected_item_name)+1,1)
-        menuUI.write(storage.getDisplayName(selected_item_name))
+        menuUI.setCursorPos(menuSizeX-#storage.getDisplayName(selected_item_name)-#" "-#tostring(storage.getItemCount(selected_item_name))+1,1)
+        menuUI.write(storage.getDisplayName(selected_item_name).." "..storage.getItemCount(selected_item_name))
     else
-        menuUI.setCursorPos(menuSizeX-#selected_item_name,1)
-        menuUI.write(selected_item_name)
+        menuUI.setCursorPos(menuSizeX-#selected_item_name-#" "-#tostring(storage.getItemCount(selected_item_name)),1)
+        menuUI.write(selected_item_name.." "..storage.getItemCount(selected_item_name))
     end
     menuUI.setCursorPos(1,menuSizeY-1)
     menuUI.setBackgroundColor(colors.white)
@@ -202,6 +207,43 @@ local function drawResults(data)
     end
 end
 
+local function request(item_name, count)
+    -- Request button
+    slotLock = true
+    count = tonumber(count) or 64
+    if count > storage.getItemCount(item_name) then
+        count = storage.getItemCount(item_name)
+    end
+    if type(tonumber(count)) ~= "nil" then
+        term.setCursorPos(1,1)
+        local freeSlot = -1
+        for i = 1, 16 do
+            if type(protected_slots[i]) ~= "nil" then
+                if protected_slots[i].name == item_name then
+                    if protected_slots[i].count + tonumber(count) <= 64 then
+                        protected_slots[i].count = protected_slots[i].count + tonumber(count)
+                        freeSlot = i
+                        break
+                    elseif protected_slots[i].count ~= 64 then
+                        protected_slots[i].count = 64
+                        local transfer = tonumber(count)-protected_slots[i].count
+                        table.insert(protected_slots,i+1,{name = item_name, count = transfer})
+                        freeSlot = i
+                        break
+                    end
+                end
+            else
+                table.insert(protected_slots,i,{name = item_name, count = tonumber(count)})
+                freeSlot = i
+                break
+            end
+        end
+        storage.exportItems(turtle_name,item_name,tonumber(count),freeSlot)
+        drawMenu()
+    end
+    slotLock = false
+end
+
 ---Handles clicks on the UI, such as pressing buttons
 local function clickLoop()
     while not shuttingDown do
@@ -236,31 +278,7 @@ local function clickLoop()
                 end
             elseif pressedButton == "request" then
                 -- Request button
-                local count = tonumber(inputCount) or 64
-                if type(tonumber(count)) ~= "nil" then
-                    term.setCursorPos(1,1)
-                    for i = 1, 16 do
-                        if type(protected_slots[i]) ~= "nil" then
-                            if protected_slots[i].name == selected_item_name then
-                                if protected_slots[i].count + tonumber(count) <= 64 then
-                                    protected_slots[i].count = protected_slots[i].count + tonumber(count)
-                                else
-                                    local excess = (protected_slots[i].count + tonumber(count))%64
-                                    protected_slots[i].count = 64
-                                    table.insert(protected_slots,i+1,{name = selected_item_name, count = excess})
-                                end
-                                break
-                            else
-                                table.insert(protected_slots,{name = selected_item_name, count = tonumber(count)})
-                                break
-                            end
-                        else
-                            table.insert(protected_slots,{name = selected_item_name, count = tonumber(count)})
-                            break
-                        end
-                    end
-                    storage.exportItems(turtle_name,selected_item_name,tonumber(count))
-                end
+                request(selected_item_name,inputCount)
             end
         end
     end
@@ -319,32 +337,7 @@ local function selectionLoop()
                     pressedButton = "request"
                     sleep(0.1)
                     pressedButton = ""
-                    -- Request button
-                    local count = tonumber(inputCount) or 64
-                    if type(tonumber(count)) ~= "nil" then
-                        term.setCursorPos(1,1)
-                        for i = 1, 16 do
-                            if type(protected_slots[i]) ~= "nil" then
-                                if protected_slots[i].name == selected_item_name then
-                                    if protected_slots[i].count + tonumber(count) <= 64 then
-                                        protected_slots[i].count = protected_slots[i].count + tonumber(count)
-                                    else
-                                        local excess = (protected_slots[i].count + tonumber(count))%64
-                                        protected_slots[i].count = 64
-                                        table.insert(protected_slots,i+1,{name = selected_item_name, count = excess})
-                                    end
-                                    break
-                                else
-                                    table.insert(protected_slots,{name = selected_item_name, count = tonumber(count)})
-                                    break
-                                end
-                            else
-                                table.insert(protected_slots,{name = selected_item_name, count = tonumber(count)})
-                                break
-                            end
-                        end
-                        storage.exportItems(turtle_name,selected_item_name,tonumber(count))
-                    end
+                    request(selected_item_name,inputCount)
                 else
                     local success, char = pcall(string.char,arg1)
                     if success then
@@ -387,9 +380,11 @@ end
 local function importLoop()
     while not shuttingDown do
         for i = 1, 16 do
-            if type(protected_slots[i]) == "nil" then
-                if turtle.getItemCount(i) > 0 then
-                    storage.importItems(turtle_name,i,64)
+            if not slotLock then
+                if type(protected_slots[i]) == "nil" then
+                    if turtle.getItemCount(i) > 0 then
+                        storage.importItems(turtle_name,i,64)
+                    end
                 end
             end
         end
@@ -402,13 +397,15 @@ local function inventoryUpdateLoop()
     while not shuttingDown do
         os.pullEvent("turtle_inventory")
         for i = 16, 1, -1 do
-            if type(protected_slots[i]) ~= "nil" then
-                local details = turtle.getItemDetail(i)
-                if type(details) ~= "nil" then
-                    if protected_slots[i].name ~= details.name then
-                        table.remove(protected_slots,i)
+            if not slotLock then
+                if type(protected_slots[i]) ~= "nil" then
+                    local details = turtle.getItemDetail(i)
+                    if type(details) ~= "nil" then
+                        if protected_slots[i].name ~= details.name or protected_slots[i].count ~= details.count then
+                            table.remove(protected_slots,i)
+                        end
                     else
-                        protected_slots[i].count = details.count
+                        table.remove(protected_slots,i)
                     end
                 end
             end
@@ -461,6 +458,7 @@ local function serviceHandler()
                 old_selected_item_name = selected_item_name
             end
         end
+        storage.importFromChests()
         sleep(0)
     end
 end
