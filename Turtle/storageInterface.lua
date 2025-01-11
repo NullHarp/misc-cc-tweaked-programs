@@ -33,15 +33,8 @@ storage.setIgnoredChests(ignored)
 print("Configuring import chests.")
 storage.setImportChests(import)
 print("Checking if display name index exists.")
-if not storage.loadDisplayNames() then
-    print("Could not find display name index, manually indexing.")
-    storage.refresh(true)
-    print("Index complete, saving index for future use.")
-    storage.saveDisplayNames()
-else
-    print("Found index, proceding.")
-    storage.refresh(false)
-end
+storage.refresh(true)
+storage.saveDisplayNames()
 
 ---Item id of the currently selected item
 local selected_item_name = ""
