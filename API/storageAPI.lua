@@ -172,19 +172,31 @@ local function updateItemIndex(updateDisplayNameIndex)
         end
         return coroutines
     end
-    
 
     -- Create coroutines
     local coroutines = createCoroutines()
     executeCorutines(coroutines)
     if updateDisplayNameIndex then
-        for i = 1, #item_index do
-            local item = item_index[i]
-            if type(displayNameIndex[item.name]) == "nil" then
-                local details = chests[item.chest_index].getItemDetail(item.slot)
-                displayNameIndex[item.name] = details.displayName
+        local function getName(chest,slot)
+            local details = chest.getItemDetail(slot)
+            if type(displayNameIndex[details.name]) == "nil" then
+                displayNameIndex[details.name] = details.displayName
             end
         end
+        local functions = {}
+        for i = 1, #chests do
+            local list = chests[i].list()
+            for slot, item in pairs(list) do
+                if type(item) ~= "nil" then
+                    if type(displayNameIndex[item.name]) == "nil" then
+                        table.insert(functions, function()
+                            getName(chests[i],slot)
+                        end)
+                    end
+                end
+            end
+        end
+        parallel.waitForAll(table.unpack(functions))
     end
 end
 
