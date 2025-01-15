@@ -1,3 +1,5 @@
+local sha2 = require("sha2")
+
 local modem = peripheral.find("modem")
 
 local serverChannel = 301
@@ -8,7 +10,15 @@ end
 
 local clientAddress = ""
 
+local salt = "bobby"
+local passwordHash = ""
+
 modem.open(serverChannel)
+
+local function generateTimestampHash()
+    local timestamp = math.floor(os.epoch("utc")/2000)
+    return sha2.hash256(passwordHash..timestamp..salt)
+end
 
 ---Sends a request to the server and awaits a response or timesout, whatever comes first
 ---@param request table Data containing the request to send to server
@@ -17,8 +27,9 @@ modem.open(serverChannel)
 ---@return boolean success Did we get the response we wanted
 ---@return table|string responseData The message response, or the reason why it failed
 local function sendRequest(request, response_type, timeout)
-    sleep(0.05)
+    request.tPasswordHash = generateTimestampHash()
     modem.transmit(serverChannel,serverChannel,request)
+    sleep(0.1)
     timeout = timeout or 5
     local timerId = os.startTimer(timeout)
     while true do
@@ -44,7 +55,8 @@ local function sendRequest(request, response_type, timeout)
     end
 end
 
-local function verifyAddress(address)
+local function verifyAddress(address, password)
+    passwordHash = sha2.hash256(password..salt)
     local packet = {
         type = "verifyAddress",
         clientAddress = address
@@ -59,10 +71,9 @@ end
 
 ---Sets the CMail address to use for the client
 ---@param address string
-local function setAddress(address)
-    if verifyAddress(address) then
+local function setAddress(address,password)
+    if verifyAddress(address,password) then
         clientAddress = address
-        sleep(0.1)
         return true
     else
         return false

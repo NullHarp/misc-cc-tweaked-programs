@@ -1,3 +1,5 @@
+local sha2 = require("sha2")
+
 local modem = peripheral.find("modem")
 
 local serverChannel = 301
@@ -53,8 +55,9 @@ end
 
 ---Registers a new name under a domain
 ---@param name string Represents the name, such as nullharp
----@param domain_name string Valid domain name 
-local function registerName(name,domain_name)
+---@param domain_name string Valid domain name
+---@param password string Password used to authenticate the address
+local function registerName(name,domain_name, password)
     local domains = getDomains()
     if domains[domain_name] then
         local existingName = false
@@ -69,6 +72,18 @@ local function registerName(name,domain_name)
         local file = fs.open("domains.json","w")
         local domains_json = textutils.serialiseJSON(domains)
         file.write(domains_json)
+        file.close()
+
+        local file = fs.open(domain_name.."/"..name..".acc","w")
+        local account = {
+            password = {
+                hash = "",
+                salt = "bobby"
+            }
+        }
+        account.password.hash = sha2.hash256(password..account.password.salt)
+        local account_json = textutils.serialiseJSON(account)
+        file.write(account_json)
         file.close()
         return true
     else
@@ -115,6 +130,33 @@ local function translateFromAddress(address)
     end
 end
 
+local function authenticate(timestampedPasswordHash, address)
+    local success, name, domain_name = translateFromAddress(address)
+    if success then
+        local file = fs.open(domain_name.."/"..name..".acc","r")
+        local fileData = file.readAll()
+        file.close()
+        local account_tbl = textutils.unserialiseJSON(fileData)
+        local password = account_tbl.password
+        local hash = password.hash
+        local salt = password.salt
+        local timestamp = math.floor(os.epoch("utc")/2000)
+        local tPasswordHash = sha2.hash256(hash..timestamp..salt)
+        if timestampedPasswordHash == tPasswordHash then
+            return true
+        else
+            timestamp = timestamp-1
+            tPasswordHash = sha2.hash256(hash..timestamp..salt)
+            if timestampedPasswordHash == tPasswordHash then
+                return true
+            end
+            return false
+        end
+    else
+        return false
+    end
+end
+
 local function isValidAddress(address)
     local success, name, domain_name = translateFromAddress(address)
     return success
@@ -132,7 +174,6 @@ local function receiveRequest()
                 end
             end
         end
-        sleep(0)
     end
 end
 
@@ -197,7 +238,9 @@ return {
     translateToAddress = translateToAddress,
     registerDomain = registerDomain,
     registerName = registerName,
+    getDomains = getDomains,
     isValidAddress = isValidAddress,
+    authenticate = authenticate,
     isValidName = isValidName,
     receiveRequest = receiveRequest,
     getMailIndex = getMailIndex,

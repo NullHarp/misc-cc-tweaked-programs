@@ -1,13 +1,14 @@
 local client = require("clientAPI")
 
 if os.getComputerID() ~= 23 then
-    local success = client.setAddress("nullharp@cmail.co")
+    local success = client.setAddress("nullharp@cmail.co","test")
     if not success then
         error("Invalid address.")
     end
-    client.sendEmail("Hi this is bob","test@testing.co","Bobby's Love")
+    local message = read()
+    client.sendEmail(message,"test@testing.co","Bobby's Love")
 else
-    local success = client.setAddress("test@testing.co")
+    local success = client.setAddress("test@testing.co","test")
     if not success then
         error("Invalid address.")
     end
