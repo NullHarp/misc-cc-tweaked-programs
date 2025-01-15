@@ -1,6 +1,15 @@
 local sha2 = require("sha2")
 
-local modem = peripheral.find("modem")
+local modems = {peripheral.find("modem")}
+local modem = {}
+for i,v in pairs(modems) do
+    if v.isWireless then
+        modem = modems[i]
+    end
+end
+if modem == {} then
+    modem = modems[1]
+end
 
 local serverChannel = 301
 
