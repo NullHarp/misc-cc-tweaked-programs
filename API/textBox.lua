@@ -3,16 +3,16 @@ local button = require("buttonAPI")
 local textBoxes = {}
 
 local conversionLookup = {
-    ["\49"] = "\33",
-    ["\50"] = "\64",
-    ["\51"] = "\35",
-    ["\52"] = "\36",
-    ["\53"] = "\37",
-    ["\54"] = "\94",
-    ["\55"] = "\38",
-    ["\56"] = "\42",
-    ["\57"] = "\40",
-    ["\48"] = "\41"
+    [keys.one] = "\33",
+    [keys.two] = "\64",
+    [keys.three] = "\35",
+    [keys.four] = "\36",
+    [keys.five] = "\37",
+    [keys.six] = "\94",
+    [keys.seven] = "\38",
+    [keys.eight] = "\42",
+    [keys.nine] = "\40",
+    [keys.zero] = "\41"
 }
 
 local Box = {}
