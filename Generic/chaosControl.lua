@@ -1,9 +1,9 @@
 local reactor = peripheral.find("draconic_reactor")
 
 ---Name of the flow gate that injects energy into the reactor
-local flow_gate_intake = peripheral.wrap("")
+local flow_gate_intake = peripheral.wrap("flow_gate_0")
 ---Name of the flow gate the removes energy from the reactor
-local flow_gate_outlet = peripheral.wrap("")
+local flow_gate_outlet = peripheral.wrap("flow_gate_1")
 local pid = require("PID")
 
 local data = reactor.getReactorInfo()
@@ -11,9 +11,9 @@ local data = reactor.getReactorInfo()
 local injectionRate = 1000000
 local extractionRate = 0
 
-local targetShield = 60
+local targetShield = 40
 local targetSaturation = 20
-local targetTemperature = 7000
+local targetTemperature = 7500
 
 local injectionPid = pid.makePID(0.001,0.01,0.05,targetShield*1000000,0)
 local extractionPid = pid.makePID(0.003,0.1,0.05,targetSaturation*10000000,0)
