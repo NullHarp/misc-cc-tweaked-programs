@@ -19,7 +19,7 @@ local function newButton(terminal,button_group,startX,startY,label,id,bgColor,te
         buttons[button_group] = {}
     end
     width = width or #label
-    height = height or 1
+    height = height or 0
     bgColor = bgColor or colors.white
     bgColorPressed = bgColorPressed or bgColor
     textColor = textColor or colors.black
@@ -31,7 +31,7 @@ local function newButton(terminal,button_group,startX,startY,label,id,bgColor,te
         minX = startX,
         minY = startY,
         maxX = startX+width-1,
-        maxY = startY+height-1,
+        maxY = startY+height,
         bgColor = bgColor,
         bgColorPressed = bgColorPressed,
         textColor = textColor,
@@ -135,4 +135,18 @@ local function deleteButton(buttonGroup,button_id)
     return false
 end
 
-return {newButton = newButton, drawButtons = drawButtons, processButtons = processButtons, getButton = getButton, deleteButton = deleteButton}
+local function repositionButton(buttonGroup,button_id,x,y,width,height)
+    for index, button in pairs(buttons[buttonGroup]) do
+        if button.id == button_id then
+            buttons[buttonGroup][index].minX = x
+            buttons[buttonGroup][index].minY = y
+            if width and height then
+                buttons[buttonGroup][index].maxX = buttons[buttonGroup][index].minX+width-1
+                buttons[buttonGroup][index].maxX = buttons[buttonGroup][index].minY+width-1
+            end
+
+        end
+    end
+end
+
+return {newButton = newButton, drawButtons = drawButtons, processButtons = processButtons, getButton = getButton, deleteButton = deleteButton, repositionButton = repositionButton}

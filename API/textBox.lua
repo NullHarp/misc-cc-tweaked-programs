@@ -75,11 +75,29 @@ function Box.draw(self)
     self.win.setCursorPos(1,1)
     self.win.clear()
     if self.height == 1 then
+        self.win.setCursorPos(1,1)
         self.win.write(self.text)
     else
-        term.redirect(self.win)
-        print(self.text)
-        term.redirect(old_term)
+        if #self.text > self.width then
+            for i = 1, math.ceil(#self.text / self.width) do
+                local posX, posY = self.win.getCursorPos()
+                self.win.setCursorPos(1,posY)
+                if i == 1 then
+                    self.win.write(string.sub(self.text,1,i*(self.width-1)))
+                else
+                    self.win.write(string.sub(self.text,(i-1)*(self.width-1)-1,i*(self.width-2)))
+                end
+                if i ~= #self.text / self.width then
+                    self.win.setCursorPos(1,posY+1)
+                end
+            end
+        else
+            self.win.setCursorPos(1,1)
+            self.win.write(self.text)
+        end
+        --term.redirect(self.win)
+        --print(self.text)
+        --term.redirect(old_term)
     end
     self.win.redraw()
 end
