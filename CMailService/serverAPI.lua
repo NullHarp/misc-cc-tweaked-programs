@@ -178,7 +178,7 @@ local function receiveRequest()
             if type(message) == "table" then
                 if type(message.type) == "string" then
                     if type(message.clientAddress) == "string" then
-                        return message.type, message.clientAddress, message
+                        return message.type, message.clientAddress, message.data
                     end
                 end
             end

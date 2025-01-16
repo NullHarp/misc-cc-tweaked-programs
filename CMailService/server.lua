@@ -17,7 +17,9 @@ local function main()
         if mType == "verifyAddress" then
             local response = {
                 type = "addressValidity",
-                isValid = server.authenticate(message.tPasswordHash,clientAddress)
+                data = {
+                    isValid = server.authenticate(message.tPasswordHash,clientAddress)
+                }
             }
             server.sendResponse(response,clientAddress)
             serverLog:writeLog("Sent addressValidity to: "..clientAddress,"DEBUG")
@@ -26,8 +28,10 @@ local function main()
                 local hasMail, index = server.getMailIndex(clientAddress)
                 local response = {
                     type = "mailIndex",
-                    hasMail = hasMail,
-                    index = index
+                    data = {
+                        hasMail = hasMail,
+                        index = index
+                    }
                 }
                 server.sendResponse(response,clientAddress)
                 serverLog:writeLog("Sent mailIndex to: "..clientAddress,"DEBUG")

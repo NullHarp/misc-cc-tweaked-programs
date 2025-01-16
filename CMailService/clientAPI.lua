@@ -35,35 +35,56 @@ end
 ---@return boolean success Did we get the response we wanted
 ---@return table|string responseData The message response, or the reason why it failed
 local function sendRequest(request, response_type, timeout)
-    request.tPasswordHash = generateTimestampHash()
+    if not request then
+        error("Must specify request.")
+    end
+    if not response_type then
+        error("Must specify response type.")
+    end
+    timeout = timeout or 5
+    request.data = request.data or {}
+    request.data.tPasswordHash = generateTimestampHash()
     modem.transmit(serverChannel,serverChannel,request)
     sleep(0.1)
-    timeout = timeout or 5
     local timerId = os.startTimer(timeout)
     while true do
         local event, arg1, arg2, arg3, arg4, arg5 = os.pullEvent()
+
+        -- We check if a timer representing the timeout has been pulled
+        if event == "timer" then
+            --Confirm the id of the pulled timer matches the specified one
+            if arg1 == timerId then
+                return false, "Request timed out"
+            end
+        end
+
         if event == "modem_message" then
             if arg1 == peripheral.getName(modem) and arg2 == serverChannel and arg3 == serverChannel then
                 if type(arg4) == "table" then
                     local message = arg4
-                    if message.type == response_type then
-                        if message.clientAddress == request.clientAddress then
-                            return true, message
-                        end
-                    elseif message.type == "requestFailure" then
+
+                    if message.type == "requestFailure" then
                         return false, message.reason
                     end
+
+                    if message.type == response_type then
+                        if message.clientAddress == request.clientAddress then
+                            return true, message.data
+                        end
+                    end
                 end
-            end
-        elseif event == "timer" then
-            if arg1 == timerId then
-                return false, "Request timed out"
             end
         end
     end
 end
 
 local function verifyAddress(address, password)
+    if not address then
+        error("Address not specified.")
+    end
+    if not password then
+        error("Password not specified.")
+    end
     passwordHash = sha2.hash256(password..salt)
     local packet = {
         type = "verifyAddress",
@@ -80,6 +101,12 @@ end
 ---Sets the CMail address to use for the client
 ---@param address string
 local function setAddress(address,password)
+    if not address then
+        error("Address not specified.")
+    end
+    if not password then
+        error("Password not specified.")
+    end
     if verifyAddress(address,password) then
         clientAddress = address
         return true
@@ -120,8 +147,10 @@ local function sendEmail(message, targetAddress, title)
         type = "sendEmail",
         targetAddress = targetAddress,
         clientAddress = clientAddress,
-        title = title,
-        message = message
+        data = {
+            title = title,
+            message = message
+        }
     }
     local success, response = sendRequest(packet,"emailSuccess",5)
     return success
