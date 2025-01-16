@@ -79,14 +79,16 @@ function Box.draw(self)
         self.win.write(self.text)
     else
         if #self.text > self.width then
+            local currentStart = 1
+            local currentEnd = self.width
             for i = 1, math.ceil(#self.text / self.width) do
                 local posX, posY = self.win.getCursorPos()
                 self.win.setCursorPos(1,posY)
-                if i == 1 then
-                    self.win.write(string.sub(self.text,1,i*(self.width-1)))
-                else
-                    self.win.write(string.sub(self.text,(i-1)*(self.width-1)-1,i*(self.width-2)))
-                end
+                self.win.write(string.sub(self.text,currentStart,currentEnd))
+                
+                currentStart = currentStart+self.width
+                currentEnd = currentEnd+self.width
+
                 if i ~= #self.text / self.width then
                     self.win.setCursorPos(1,posY+1)
                 end
@@ -103,6 +105,8 @@ function Box.draw(self)
 end
 
 local function createTextBox(startX,startY,width,height,id)
+    width = math.floor(width)
+    height = math.floor(height)
     button.newButton(term.native(),"textBoxes",startX,startY,"",id,colors.lightGray,colors.lightGray,colors.gray,true,width,height)
     local win = window.create(term.native(),startX,startY,width,height)
     local box = {
