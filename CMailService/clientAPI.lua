@@ -145,11 +145,11 @@ local function sendEmail(message, targetAddress, title)
     end
     local packet = {
         type = "sendEmail",
-        targetAddress = targetAddress,
         clientAddress = clientAddress,
         data = {
             title = title,
-            message = message
+            message = message,
+            targetAddress = targetAddress,
         }
     }
     local success, response = sendRequest(packet,"emailSuccess",5)
