@@ -96,7 +96,7 @@ local function indexChests()
     for i1 = 1, #chest_types do
         for i,v in pairs(table.pack(peripheral.find(chest_types[i1]))) do
             if type(v) ~= "number" then
-                if type(ignore_chests[peripheral.getName(v)]) == "nil" and type(import_chests[peripheral.getName(v)]) == "nil" then
+                if not ignore_chests[peripheral.getName(v)] and not import_chests[peripheral.getName(v)] then
                     table.insert(chests,v)
                 end
             end
@@ -112,11 +112,22 @@ end
 ---Finds the first avaliable chest with a free slot
 ---@return boolean success Did we find a free slot in a chest
 ---@return table|nil chestPeripheral The chest peripheral with a free slot, or nil
----@return table|nil avaliableSlots How many slots are free, or nil
+---@return integer|nil avaliableSlots How many slots are free, or nil
 local function findAvaliableChest()
     for i = 1, #chests do
-        if table.maxn(chests[i].list()) < chests[i].size() then
-            return true, chests[i], chests[i].size() - table.maxn(chests[i].list())
+        local freeSlots = 0
+        for slot, item in pairs(chests[i].list()) do
+            if not item then
+                freeSlots = freeSlots + 1
+            end
+        end
+        if freeSlots == 0 then
+            if #chests[i].list() < chests[i].size() then
+                freeSlots = chests[i].size() - #chests[i].list()
+            end
+        end
+        if freeSlots > 0 then
+            return true, chests[i], freeSlots
         end
     end
     return false, nil, nil
@@ -163,7 +174,7 @@ local function updateItemIndex(updateDisplayNameIndex)
             local co = coroutine.create(function()
                 local list = lists[i]
                 for slot, item in pairs(list) do
-                    if type(item) ~= "nil" then
+                    if item then
                         table.insert(item_index,{slot=slot,name=item.name,count=item.count,chest = chest_names[i],chest_index = i,chest_p=chests[i]})  
                     end
                 end
@@ -179,7 +190,7 @@ local function updateItemIndex(updateDisplayNameIndex)
     if updateDisplayNameIndex then
         local function getName(chest,slot)
             local details = chest.getItemDetail(slot)
-            if type(displayNameIndex[details.name]) == "nil" then
+            if not displayNameIndex[details.name] then
                 displayNameIndex[details.name] = details.displayName
             end
         end
@@ -187,8 +198,8 @@ local function updateItemIndex(updateDisplayNameIndex)
         for i = 1, #chests do
             local list = chests[i].list()
             for slot, item in pairs(list) do
-                if type(item) ~= "nil" then
-                    if type(displayNameIndex[item.name]) == "nil" then
+                if item then
+                    if not displayNameIndex[item.name] then
                         table.insert(functions, function()
                             getName(chests[i],slot)
                         end)
@@ -214,12 +225,19 @@ end
 ---@return boolean  success Did we find a item meeting the requirements
 ---@return table|nil item_data Data related to the found item, or returns nil
 local function findItem(item_name,count,fuzzySearch)
+    if not item_name then
+        error("Item name is required.")
+    end
+    if not count then
+        error("Item count is required.")
+    end
     fuzzySearch = fuzzySearch or false
+
     for i = #item_index, 1, -1 do
         local item = item_index[i]
         if (item.name == item_name or (fuzzySearch and lev.levenshtein(item.name,item_name) < 3)) and item.count >= count then
             local real_data = chests[item_index[i].chest_index].getItemDetail(item.slot)
-            if type(real_data) == "nil" then
+            if real_data then
                 table.remove(item_index,i)
                 break
             end
@@ -243,11 +261,10 @@ end
 local function updateItemCounts()
     itemCounts = {}
     for i = 1, #item_index do
-        local item = item_index[i]
-        if type(itemCounts[item.name]) ~= "nil" then
-            itemCounts[item.name] = itemCounts[item.name] + item.count
+        if itemCounts[item_index[i].name] then
+            itemCounts[item_index[i].name] = itemCounts[item_index[i].name] + item_index[i].count
         else
-            itemCounts[item.name] = item.count
+            itemCounts[item_index[i].name] = item_index[i].count
         end
     end
 end
@@ -257,8 +274,11 @@ end
 ---@param item_name string Name of item
 ---@return integer count How many of the item were found
 local function getItemCount(item_name)
+    if not item_name then
+        error("Must specify item name.")
+    end
     local count = 0
-    if type(itemCounts[item_name]) ~= "nil" then
+    if itemCounts[item_name]then
         count = itemCounts[item_name]
     end
     return count
@@ -269,6 +289,9 @@ end
 ---@param item_name string Name of item
 ---@return table results Name and count of found items, plus field n representing the size
 local function searchItems(item_name)
+    if not item_name then
+        error("Item name must be specified.")
+    end
     local results = {}
     local size = 0
     for item,count in pairs(itemCounts) do
@@ -286,6 +309,15 @@ end
 ---@param slot integer Valid slot
 ---@param count integer How many of the item
 local function importItems(fromChest, slot, count)
+    if not fromChest then
+        error("Must specify what chest to import items from.")
+    end
+    if not slot then
+        error("Must specify what slot to import items from.")
+    end
+    if not count then
+        error("Must specify how many of the item to import.")
+    end
     local success, output = findAvaliableChest()
     if success then
         local chest_index = 0
@@ -304,6 +336,9 @@ local function importItems(fromChest, slot, count)
         for s, item in pairs(list) do
             table.insert(item_index,{slot=s,name=item.name,count=item.count,chest = chest_names[i],chest_index = i,chest_p=chests[i]})  
         end
+        if chest_index == 0 then
+            updateItemIndex(false)
+        end
     end
     updateItemCounts()
 end
@@ -315,6 +350,12 @@ end
 ---@param toSlot? integer The Slot to export to (defaults to 1)
 ---@return boolean success Did the operation succede
 local function exportItems(toChest, item_name, count, toSlot)
+    if not toChest then
+        error("Must specify what chest to export to.")
+    end
+    if not item_name then
+        error("Must specify item name.")
+    end
     count = count or 64
     toSlot = toSlot or 1
     local toTransfer = count
@@ -327,6 +368,9 @@ local function exportItems(toChest, item_name, count, toSlot)
                 transfer = item_index[i].count
             else
                 transfer = toTransfer
+            end
+            if not chests[item_index[i].chest_index] then
+                error("Invalid chest index: "..item_index[i].chest_index)
             end
             local transferCount = chests[item_index[i].chest_index].pushItems(toChest,item_index[i].slot,transfer,toSlot)
             if transferCount == 0 then
@@ -353,11 +397,7 @@ local function exportItems(toChest, item_name, count, toSlot)
             end
         end
     end
-    if toTransfer > 0 then
-        return false
-    else
-        return true
-    end
+    return toTransfer > 0
 end
 
 ---Imports all items from all import_chests specified in the filter
