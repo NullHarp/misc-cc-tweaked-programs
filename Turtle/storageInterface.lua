@@ -32,9 +32,7 @@ print("Configuring ignored chests.")
 storage.setIgnoredChests(ignored)
 print("Configuring import chests.")
 storage.setImportChests(import)
-print("Checking if display name index exists.")
 storage.refresh(true)
-storage.saveDisplayNames()
 
 ---Item id of the currently selected item
 local selected_item_name = ""
