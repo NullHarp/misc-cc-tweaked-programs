@@ -190,7 +190,7 @@ local function updateItemIndex(updateDisplayNameIndex)
     if updateDisplayNameIndex then
         local function getName(chest,slot)
             local details = chest.getItemDetail(slot)
-            if not displayNameIndex[details.name] then
+            if details then
                 displayNameIndex[details.name] = details.displayName
             end
         end
@@ -204,10 +204,23 @@ local function updateItemIndex(updateDisplayNameIndex)
                             getName(chests[i],slot)
                         end)
                     end
+                    displayNameIndex[item.name] = true
                 end
             end
         end
-        parallel.waitForAll(table.unpack(functions))
+        local function waitforall()
+            parallel.waitForAll(table.unpack(functions))
+        end
+        local function timeout()
+            local timerID = os.startTimer(1)
+            while true do
+                local event, id = os.pullEvent("timer")
+                if id == timerID then
+                    return
+                end
+            end
+        end
+        parallel.waitForAny(waitforall,timeout)
     end
 end
 
