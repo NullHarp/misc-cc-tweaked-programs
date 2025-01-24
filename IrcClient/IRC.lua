@@ -7,6 +7,8 @@ local attemptRegistration = false
 
 local password = ""
 
+local VERSION = "V0.1.3 Null WS IRC Client"
+
 print("Please type username:")
 local username = read()
 print("Please insert realname (can be anything):")
@@ -212,6 +214,35 @@ local function simpleResponse(rawMsg)
     end
 end
 
+local function ctcpHandler(rawMsg)
+    local words = string.gmatch(rawMsg, "%S+")
+    local senderInfo = words()
+    local command = words()
+    local sender = nil
+    if string.sub(rawMsg,1,1) == ":" then
+        local senderStart = 2
+        local s, e = string.find(rawMsg,"!")
+        if not s or not e then
+            s, e = string.find(rawMsg," ")
+        end
+        if s or e then
+            local senderEnd = e-1
+            sender = string.sub(rawMsg,senderStart,senderEnd)
+        end
+    end
+    if command == "PRIVMSG" then
+        local dest = words()
+        local firstWord = words()
+        if string.sub(firstWord,1,1) == ":" then
+            local start = #senderInfo+1+#command+1+#dest+3
+            local msg = string.sub(rawMsg,start)
+            if string.find(msg,"VERSION",1,true) then
+                ws.send("notice "..sender.." :".."\1VERSION "..VERSION.."\1")
+            end
+        end
+    end
+end
+
 local loggedIn = false
 
 local function resp()
@@ -251,6 +282,7 @@ local function resp()
                 processNumerics(response)
             else
                 if command == "PRIVMSG" then
+                    ctcpHandler(response)
                     dest = words()
                     local firstWord = words()
                     if string.sub(firstWord,1,1) == ":" then
