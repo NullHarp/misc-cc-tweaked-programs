@@ -8,11 +8,24 @@ monitor.clear()
 
 while true do
     local vel = ship.getVelocity()
+
+    local speed = math.sqrt(vel.x^2 + vel.y^2 + vel.z^2)
+    local floored_speed = math.floor(speed)
+
     local pos = ship.getWorldspacePosition()
+    local floored_pos = {}
+
+    floored_pos.x = math.floor(pos.x)
+    floored_pos.y = math.floor(pos.y)
+    floored_pos.z = math.floor(pos.z)
+
     monitor.setCursorPos(1,1)
     monitor.clearLine()
-    monitor.write("Pos:   "..tostring(math.floor(pos.x)).." "..tostring(math.floor(pos.y)).." "..tostring(math.floor(pos.z)))
+
+    monitor.write("Pos:   "..tostring(floored_pos.x).." "..tostring(floored_pos.y).." "..tostring(floored_pos.z))
+    
     monitor.setCursorPos(1,2)
-    monitor.write("Speed: "..tostring(math.floor(math.sqrt(vel.x^2 + vel.y^2 + vel.z^2))))
+    monitor.clearLine()
+    monitor.write("Speed: "..tostring(floored_speed))
     sleep(0)
 end
