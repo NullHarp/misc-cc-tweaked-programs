@@ -3,19 +3,26 @@ local util = require("util")
 local version = "V0.1.5"
 
 ---Represents which direction the turtle is facing
----0 = SOUTH / PosZ
----1 = WEST / NegX
----2 = NORTH / NegZ
----3 = EAST / PosX
+---0 = NORTH / NegZ
+---1 = EAST / PosX
+---2 = SOUTH / PosZ
+---3 = WEST / NegX
 local direction = 0
 local pos = {x=0,y=0,z=0}
 
 local home = {x=8424,y=63,z=10524,direction=2}
 
-local cursed_scanner = true
+local universal = false
+local useGps = false
 
-local scanner = peripheral.find("universal_scanner")
---local scanner = peripheral.find("geoScanner")
+local scanner = nil
+
+if universal then
+    scanner = peripheral.find("universal_scanner")
+else
+    scanner = peripheral.find("geoScanner")
+end
+
 if type(scanner) == "nil" then
     error("Could not find Scanner")
 end
@@ -57,7 +64,7 @@ local function updateJobs()
     print("Saved current job status to file.")
 end
 
-if not turtUtil.loadData() then
+if not turtUtil.loadData() and useGps then
     print("No positional data found, recalibrating via GPS.")
     local failed_attempts = 0
     while not turtUtil.recalibrateOrientation() do
@@ -69,6 +76,10 @@ if not turtUtil.loadData() then
     if failed_attempts > 0 then
         print("Successful recalibration after "..failed_attempts)
     end
+elseif not useGps then
+    print("No Positional data found, setting position via home pos.")
+    turtUtil.setDirection(home.direction)
+    turtUtil.setPos({x=home.x,y=home.y,z=home.z})
 end
 
 local function removeJunk()
@@ -105,9 +116,20 @@ while #jobs > 0 do
         removeJunk()
         pos = turtUtil.getPos()
         direction = turtUtil.getDirection()
-        if scanner.getCooldown("portableUniversalScan") == 0 then
-            local data,error = scanner.scan("block",8)
-            if error ~= "scanBlocks is on cooldown" then
+        local cooldown = -1
+        if universal then
+            cooldown = scanner.getCooldown("portableUniversalScan")
+        else
+            cooldown = scanner.getOperationCooldown("scanBlocks")
+        end
+        if cooldown == 0 then
+            local data, error = nil, nil
+            if universal then
+                data,error = scanner.scan("block",8)
+            else
+                data,error = scanner.scan(8)
+            end
+            if not error then
                 local results = {}
                 for index, value in ipairs(data) do
                     if value.name == jobs[1].target then
@@ -126,7 +148,7 @@ while #jobs > 0 do
                     end
                 end
                 if type(smallest_distance_pos.x) ~= "nil" then
-                    if cursed_scanner then
+                    if universal then
                         turtUtil.goTo(turtUtil.standardizeLocalCoordinates(smallest_distance_pos))
                     else
                         turtUtil.goTo(smallest_distance_pos)
@@ -160,7 +182,7 @@ while #jobs > 0 do
         offset.z = home.z - pos.z
         turtUtil.goTo(offset)
     end
-    turtUtil.turnToFace(2)
+    turtUtil.turnToFace(home.direction)
     turtUtil.up()
     turtUtil.up()
     print("Depositing aquired materials.")

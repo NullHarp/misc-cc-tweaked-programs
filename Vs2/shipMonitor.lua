@@ -19,6 +19,10 @@ while true do
     floored_pos.y = math.floor(pos.y)
     floored_pos.z = math.floor(pos.z)
 
+    local yaw = ship.getYaw()
+    local yaw_degrees = math.deg(yaw)
+    local floored_yaw = math.floor(yaw_degrees)
+
     monitor.setCursorPos(1,1)
     monitor.clearLine()
 

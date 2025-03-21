@@ -9,7 +9,7 @@ local pid = require("PID")
 local data = reactor.getReactorInfo()
 
 local injectionRate = 1000000
-local extractionRate = 0
+local extractionRate = 1000000
 
 local targetShield = 40
 local targetSaturation = 20
@@ -127,12 +127,16 @@ while true do
         local resSat = pid.PID(temperaturePid)
 
         extractionPid.target = math.min(math.max(extractionPid.target - resSat*100, 10*10000000), 96*10000000)
-    
-        injectionRate = math.max(injectionRate + resInj, 0)
+        
+        if roundDecimal(data.energySaturation/data.maxEnergySaturation,100)*100 <= 98 then
+            injectionRate = math.max(injectionRate + resInj, 0)
+        end
         if data.status == "stopping" then
             extractionRate = 0
         else
-            extractionRate = math.max(extractionRate - resExt, 0)
+            if roundDecimal(data.energySaturation/data.maxEnergySaturation,100)*100 <= 98 then
+                extractionRate = math.max(extractionRate - resExt, 0)
+            end
         end
     elseif data.status == "beyond_hope" then
         draw(data)
