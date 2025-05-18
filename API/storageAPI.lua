@@ -13,6 +13,8 @@ local item_index = {}
 ---Contains all item counts for each item in the network
 local itemCounts = {}
 
+local maxItemCounts = {}
+
 ---Contains references to the display name for every item id in the system
 local displayNameIndex = {}
 
@@ -133,37 +135,11 @@ local function findAvaliableChest()
     return false, nil, nil
 end
 
----Helper function to quickly complete all coroutines given
----@param coroutines table
-local function executeCorutines(coroutines,shouldSleep)
-    shouldSleep = shouldSleep or false
-    -- Resume all coroutines
-    while #coroutines > 0 do
-        for i3 = #coroutines, 1, -1 do
-            local co = coroutines[i3]
-            local success, err = coroutine.resume(co)
-            if not success then
-                print("Error in coroutine:", err)
-            end
-
-            -- Check if the coroutine is dead and remove it from the list
-            if coroutine.status(co) == "dead" then
-                table.remove(coroutines, i3)
-            end
-        end
-        if shouldSleep then
-            sleep(0)
-        end
-    end
-end
-
 ---Updates all items and their associated data in the item index
----@param updateDisplayNameIndex? boolean optional (and slow)
-local function updateItemIndex(updateDisplayNameIndex)
-    updateDisplayNameIndex = updateDisplayNameIndex or false
+local function updateItemIndex()
     item_index = {}
     local function createCoroutines()
-        local coroutines = {}
+        local functions = {}
         local lists = {}
         for i2, v2 in pairs(chests) do
             if type(v2) == "table" then
@@ -171,7 +147,7 @@ local function updateItemIndex(updateDisplayNameIndex)
             end
         end
         for i = 1, #chests do
-            local co = coroutine.create(function()
+            table.insert(functions, function()
                 local list = lists[i]
                 for slot, item in pairs(list) do
                     if item then
@@ -179,56 +155,54 @@ local function updateItemIndex(updateDisplayNameIndex)
                     end
                 end
             end)
-            coroutines[#coroutines + 1] = co
         end
-        return coroutines
+        return functions
     end
 
-    -- Create coroutines
-    local coroutines = createCoroutines()
-    executeCorutines(coroutines)
-    if updateDisplayNameIndex then
-        local function getName(chest,slot)
-            local details = chest.getItemDetail(slot)
-            if details then
-                displayNameIndex[details.name] = details.displayName
-            end
+    parallel.waitForAll(table.unpack(createCoroutines()))
+    local function getName(chest,slot)
+        local details = chest.getItemDetail(slot)
+        if details then
+            maxItemCounts[details.name] = details.maxCount
+            displayNameIndex[details.name] = details.displayName
         end
-        local functions = {}
-        for i = 1, #chests do
-            local list = chests[i].list()
-            for slot, item in pairs(list) do
-                if item then
-                    if not displayNameIndex[item.name] then
-                        table.insert(functions, function()
-                            getName(chests[i],slot)
-                        end)
-                    end
-                    displayNameIndex[item.name] = true
-                end
-            end
-        end
-        local function waitforall()
-            parallel.waitForAll(table.unpack(functions))
-        end
-        local function timeout()
-            local timerID = os.startTimer(1)
-            while true do
-                local event, id = os.pullEvent("timer")
-                if id == timerID then
-                    return
-                end
-            end
-        end
-        parallel.waitForAny(waitforall,timeout)
     end
+    local functions = {}
+    for i = 1, #chests do
+        local list = chests[i].list()
+        for slot, item in pairs(list) do
+            if item then
+                if not displayNameIndex[item.name] then
+                    table.insert(functions, function()
+                        getName(chests[i],slot)
+                    end)
+                else
+                    --displayNameIndex[item.name] = true
+                end
+            end
+        end
+    end
+    local function waitforall()
+        parallel.waitForAll(table.unpack(functions))
+    end
+    local function timeout()
+        local timerID = os.startTimer(1)
+        while true do
+            local event, id = os.pullEvent("timer")
+            if id == timerID then
+                return
+            end
+        end
+    end
+    parallel.waitForAny(waitforall,timeout)
 end
 
 ---Gets the display name for the specified item name
 ---@param item_name string Item id
----@return string|nil displayName Display name of specified item id, or nil
+---@return string|nil displayName Display name of specified item id, or inputed item name, if none exist
 local function getDisplayName(item_name)
-    return displayNameIndex[item_name]
+    local name = displayNameIndex[item_name] or item_name
+    return name
 end
 
 ---Finds a item and its associated data.
@@ -433,9 +407,7 @@ local function importFromChests()
 end
 
 ---Refrehes the chest index and updates all item counts
----@param updateDisplayNameIndex? boolean optional (and sloww)
-local function refresh(updateDisplayNameIndex)
-    updateDisplayNameIndex = updateDisplayNameIndex or false
+local function refresh()
     local success = loadStorageIndex()
     if not success then
         --print("StorageAPI: Existing save not found.")
@@ -443,10 +415,37 @@ local function refresh(updateDisplayNameIndex)
     -- First we get all the chests in the network
     indexChests()
     -- Then we have to index all the item data like the count and locations
-    updateItemIndex(updateDisplayNameIndex)
+    updateItemIndex()
     -- Finally we update the overall item counts for every item type
     -- We have to do this last because it realies on the item index being accurate first
     updateItemCounts()
+end
+
+local function defragmentStorage()
+    local partialStackCount = {}
+    for index, item in pairs(item_index) do
+        if item.count ~= maxItemCounts[item.name] then
+            if partialStackCount[item.name] then
+                partialStackCount[item.name].count = partialStackCount[item.name].count + 1
+            else
+                partialStackCount[item.name] = {}
+                partialStackCount[item.name].count = 1
+                partialStackCount[item.name].slots = {}
+            end
+            table.insert(partialStackCount[item.name].slots,item)
+        end
+    end
+    for name, _ in pairs(partialStackCount) do
+        while #partialStackCount[name].slots > 1 do
+            for i = #partialStackCount[name].slots, 1,  -1 do
+                local data = partialStackCount[name]
+                local transfered = data.slots[#data.slots].chest_p.pushItems(data.slots[i].chest,data.slots[#data.slots].slot,data.slots[#data.slots].count,data.slots[i].slot)
+                if transfered == 0 then
+                    table.remove(partialStackCount[name].slots,#partialStackCount[name].slots)
+                end
+            end
+        end
+    end
 end
 
 return {
@@ -465,5 +464,6 @@ return {
     updateItemIndex = updateItemIndex,
     getItemCount = getItemCount,
     searchItems = searchItems,
-    updateItemCounts = updateItemCounts
+    updateItemCounts = updateItemCounts,
+    defragmentStorage = defragmentStorage
 }

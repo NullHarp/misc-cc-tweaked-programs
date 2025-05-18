@@ -1,4 +1,4 @@
-local chat = peripheral.wrap("bottom")
+local chat = peripheral.find("chatBox")
 
 local ws, err = http.websocket("wss://hexxytest.hexxy.media:8000")
 
@@ -36,7 +36,7 @@ else
     end
 end
 
-
+--Initializes the connection by sending the username, realname, and nickname to make sure the connection is complete.
 local function init()
     if ws then
         ws.send("USER " .. username .. " unused unused " .. realname)
@@ -47,6 +47,7 @@ local function init()
 end
 
 local function processNumerics(rawMsg)
+    --Lookup table to allow easy lookup
     local lookup = {
         RPL_WELCOME = 001,
         RPL_YOURHOST = 002,
@@ -82,6 +83,7 @@ local function processNumerics(rawMsg)
         RPL_LOGGEDIN = 900
     }
 
+    --Lookup table for handling generic numerics
     local generic = {
         [001] = "[WELCOME]: ",
         [004] = "[INFO]: ",
@@ -165,13 +167,17 @@ local function processNumerics(rawMsg)
     end
 end
 
+---Processes a simple response based off raw message data
+---@param rawMsg string Raw message data received from the websocket
 local function simpleResponse(rawMsg)
+    --Simple lookup for formatting based off type
     local lookup = {
         JOIN = " joined ",
         PART = " has left ",
         QUIT = " has quit: "
     }
 
+    --Function to represent all the words in the raw message so that further processing can occur
     local words = string.gmatch(rawMsg, "%S+")
     local senderInfo = words()
     local command = words()

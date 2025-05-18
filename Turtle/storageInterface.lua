@@ -32,7 +32,14 @@ print("Configuring ignored chests.")
 storage.setIgnoredChests(ignored)
 print("Configuring import chests.")
 storage.setImportChests(import)
-storage.refresh(true)
+local startTime = os.clock()
+
+storage.refresh()
+storage.defragmentStorage()
+local finishTime = os.clock()
+
+local elapsedTime = finishTime-startTime
+--error("Took "..tostring(elapsedTime).." seconds.")
 
 ---Item id of the currently selected item
 local selected_item_name = ""

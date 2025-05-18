@@ -1,2 +1,7 @@
 .vscode/
 Generic/goodTts.lua
+API/token.txt
+Generic/getProgram.lua
+Modem/doorSpoof.lua
+Modem/thrusterHover.lua
+Private/
