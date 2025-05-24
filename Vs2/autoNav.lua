@@ -35,7 +35,7 @@ local function calculateHeading(targetX, targetY, targetZ)
     if targetYaw < 0 then targetYaw = targetYaw + 360 end
 
     -- Convert current yaw to degrees
-    local currentYaw = math.deg(rot.z)  -- double check your system uses .z for yaw
+    local currentYaw = math.deg(rot.y)  -- double check your system uses .z for yaw
 
     -- Compute relative angle (how much to turn from current to target)
     local relativeAngle = (targetYaw - currentYaw + 180) % 360 - 180
