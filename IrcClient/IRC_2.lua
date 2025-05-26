@@ -1,13 +1,14 @@
+local backend = require("IRC_backend")
+
+local ws = backend.ws
+local err = backend.err
+
 local monitor = peripheral.wrap("top")
+monitor.setTextScale(0.5)
 monitor.clear()
 monitor.setCursorPos(1,1)
 
-local url = "wss://hexxytest.hexxy.media:8000"
-
-local ws, err = http.websocket(url)
-
 local capabilities = {"standard-replies"}
-
 
 print("Username:")
 local username = read()
@@ -21,6 +22,17 @@ local hasAccount = false
 local attemptRegistration = false
 local password = ""
 
+local function sendMessage(message,textColor,bgColor)
+    if textColor then
+        monitor.setTextColor(colors[textColor])
+    end
+    if bgColor then
+        monitor.setTextColor(colors[bgColor])
+    end
+    local old_term = term.redirect(monitor)
+    print(message)
+    term.redirect(old_term)
+end
 
 print("Do you have a registered nick? Y/n:")
 local registeredNick = string.lower(read())
@@ -36,7 +48,7 @@ else
         print("Confirm password:")
         local confirmPassword = read("*")
         if password ~= confirmPassword then
-            error("Passwords dont match.")
+            error("Passwords don't match.")
         end
         print("Registration will be attempted for the nick: "..nickname)
         attemptRegistration = true
@@ -54,6 +66,7 @@ else
     end
     ws.send("USER " .. username .. " unused unused " .. realname)
     ws.send("NICK " .. nickname)
+    backend.accountData.nickname = nickname
 end
 
 local function interactNickServ()
@@ -68,158 +81,53 @@ local function interactNickServ()
     end
 end
 
-
-
-local function sendMessage(message)
-    local old_term = term.redirect(monitor)
-    print(message)
-    term.redirect(old_term)
+local function testFunc(message)
+    print("testFunc ->",message)
 end
 
-local function removePrefix(msg)
-    return string.sub(msg,2)
-end
-
-local function numericsProcessor(numeric, message,message_orgin)
-    local words = string.gmatch(message, "%S+")
-    local args = {}
-
-    for arg in words do
-        table.insert(args,arg)
-    end
-
-    local sender
-    -- The client aka the nick of the user
-    local client
-    -- Content within the actual message
-    local message_content
-
-    local command_resp
-    if args[1] == nickname then
-        client = args[1]
-        table.remove(args,1)
-    end
-    if string.sub(args[1],1,1) ~= ":" then
-        if args[1] ~= nickname and args[1] ~= message_orgin then
-            command_resp = args[1]
-            table.remove(args,1)
-        end
-    end
-
-    if string.sub(args[1],1,1) == ":" then
-        local spacing = 0
-        if client then
-            spacing = spacing + #client+1
-        end
-        if command_resp then
-            spacing = spacing + #command_resp+1
-        end
-        message_content = string.sub(message,spacing+2)
-    else
-        local spacing = 0
-        if client then
-            spacing = spacing + #client+1
-        end
-        if command_resp then
-            spacing = spacing + #command_resp+1
-        end
-        message_content = string.sub(message,spacing+1)
-    end
-    return message_content, client, command_resp
-end
-
-local function commandProcessor(message)
-    local words = string.gmatch(message, "%S+")
-    local command = words()
-    local client = words()
-    local message_content = ""
-    message_content = string.sub(message,#command+1+#client+3)
-    return command, message_content, client
-end
-
-local function processMessageOrigin(message_origin)
-    local origin_client
-    local origin_nick
-
-    local nick_end = string.find(message_origin,"!")
-    local client_end = string.find(message_origin,"@")
-    if nick_end then
-        origin_nick = string.sub(message_origin,1,nick_end-1)
-    end
-    if nick_end and client_end then
-        origin_client = string.sub(message_origin,nick_end+1,client_end-1)
-    end
-    return origin_client, origin_nick
-end
-
-local function processRawMessage(msg)
-    -- May be nil, represents the origin of the message
-    local message_origin
-    -- May be nil, represents the numeric of the command
-    local numeric
-    -- May be nil, represents the command included in the message
-    local command
-
-    local words = string.gmatch(msg, "%S+")
-    local args = {}
-
-    for arg in words do
-        table.insert(args,arg)
-    end
-
-    -- Extracts the origin prefix if it exists
-    if string.sub(msg,1,1) == ":" then
-        message_origin = removePrefix(args[1])
-        table.remove(args,1)
-    end
-    -- Checks if the arg is a numeric, if it is, extracts it
-    if tonumber(args[1]) then
-        numeric = tonumber(args[1])
-        table.remove(args,1)
-    else
-        -- Assumes the arg is a command and not a numeric
-        command = args[1]
-        table.remove(args,1)
-    end
-
-    if command == "PING" then
-        ws.send("PONG "..args[1])
-        interactNickServ()
-        return
-    end
-    -- Check if there was a message origin so we can trim it from the front of the message
-    if message_origin then
-        local message_parse_size = #message_origin+2
-        msg = string.sub(msg,message_parse_size+1)
-    end
-    if command then
-        local cmd, msg_data, client = commandProcessor(msg)
-        if cmd == "PRIVMSG" then
-            local origin_client, origin_nick = processMessageOrigin(message_origin)
-            origin_nick = origin_nick or message_origin
-
-            sendMessage(origin_nick.." -> "..client.." | "..msg_data)
-        else
-            sendMessage(client.." | ["..cmd.."] "..msg_data)
-        end
-    end
-    if numeric then
-        local message_parse_size = 4
-        local message_content = string.sub(msg,message_parse_size+1)
-        local msg_data, client, command_resp =  numericsProcessor(numeric,message_content,message_origin)
-        if client and command_resp then
-            sendMessage(client.." | ["..command_resp.."] "..msg_data)
-        elseif client then 
-            sendMessage(client.." | "..msg_data)
-        end
-    end
-end
+--backend.registerSubscriber("onMessage",testFunc)
 
 local function receiverEventLoop()
     while true do
         local message = ws.receive()
         if message then
-            processRawMessage(message)
+            local msg_data, message_destination, cmd, numeric, message_origin = backend.processRawMessage(message)
+            local origin_client, origin_nick
+            if message_origin then
+                origin_client, origin_nick = backend.processMessageOrigin(message_origin)
+            end
+
+            if cmd and not numeric then
+                -- Special exception for this command because it comes from another client and has additional data
+                if cmd == "PRIVMSG" then
+                    origin_nick = origin_nick or message_origin
+
+                    sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data)
+                elseif cmd == "PING" then
+                    if not backend.accountData.awaitingFirstPongResponse then
+                        interactNickServ()
+                    end
+                elseif cmd == "QUIT" then
+                    sendMessage(origin_nick.." has left. Reason: "..msg_data)
+                elseif message_destination then
+                    if origin_nick then
+                        sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data)
+                    else
+                        sendMessage(message_destination.." | ["..cmd.."] "..msg_data)
+                    end
+                else
+                    print("Command: "..message)
+                end
+            end
+            if numeric then
+                if message_destination and cmd then
+                    sendMessage(message_destination.." | ["..cmd.."] "..msg_data)
+                elseif message_destination then 
+                    sendMessage(message_destination.." | "..msg_data)
+                else
+                    print("Numeric: "..message)
+                end
+            end
         end
     end
 end
