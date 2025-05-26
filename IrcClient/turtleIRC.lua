@@ -18,10 +18,13 @@ local realname = "Hi, I am a bot!"
 
 ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
+ws.send("MODE +B")
 backend.accountData.nickname = nickname
 
 local function sendResponse(destination,response)
-    ws.send("PRIVMSG "..destination.." :"..response)
+    if destination and response then
+        ws.send("PRIVMSG "..destination.." :"..response)
+    end
 end
 
 local function processVisual(origin_nick)
@@ -35,11 +38,11 @@ local function processVisual(origin_nick)
         for i = 1, packetCount do
             packets[i] = string.sub(compressed_data,(i*packetSize)-(packetSize-1),i*packetSize)
         end
-        sendResponse("VisualStart")
+        sendResponse(origin_nick,"VisualStart")
         for i = 1, packetCount do
-            sendResponse(origin_nick,"Visual"..packets[i])
+            sendResponse(origin_nick,"Visual "..packets[i])
         end
-        sendResponse("VisualEnd")
+        sendResponse(origin_nick,"VisualEnd")
     end
 end
 
