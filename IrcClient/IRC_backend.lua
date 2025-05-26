@@ -2,6 +2,10 @@ local url = "wss://hexxytest.hexxy.media:8000"
 
 local ws, err = http.websocket(url)
 
+if err then
+    error(err)
+end
+
 local accountData = {
     nickname = "",
     awaitingFirstPongResponse = true

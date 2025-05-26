@@ -12,6 +12,8 @@ ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
 backend.accountData.nickname = nickname
 
+local displayWindow = window.create(term.current(),1,11,15,9)
+
 local compressedVisualData = ""
 
 local vPacketCount = 0
@@ -46,6 +48,14 @@ local function drawMap(blockData,y_level)
     term.setTextColor(colors.white)
 end
 
+local function displayText(...)
+    displayWindow.clear()
+    displayWindow.setCursorPos(1,1)
+    local old_term = term.redirect(displayWindow)
+    print(...)
+    term.redirect(old_term)
+end
+
 local function receive()
     while true do
         local message = ws.receive()
@@ -57,7 +67,7 @@ local function receive()
                     origin_client, origin_nick = backend.processMessageOrigin(message_origin)
                 end
 
-                if cmd == "PRIVMSG" then
+                if cmd == "NOTICE" then
                     local words = string.gmatch(msg_data, "%S+")
                     local args = {}
 
@@ -80,6 +90,8 @@ local function receive()
                         --print("vPacket: "..tostring(vPacketCount).."/16")
                         --print(#data)
                         compressedVisualData = compressedVisualData..data
+                    else
+                        displayText(msg_data)
                     end
                 end
             end
