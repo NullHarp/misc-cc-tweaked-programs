@@ -97,12 +97,6 @@ local function primaryFeedback()
                         success = turtle.up()
                     elseif command == "Down" then
                         success = turtle.down()
-                    elseif command == "Dig" then
-                        success = turtle.dig()
-                    elseif command == "DigUp" then
-                        success = turtle.digUp()
-                    elseif command == "DigDown" then
-                        success = turtle.digDown()
                     elseif command == "Stop" then
                         ws.send("QUIT told to stop")
                         ws.close()
