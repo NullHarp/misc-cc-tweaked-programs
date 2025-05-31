@@ -6,24 +6,20 @@ local utc_offset = -4
 local ws = backend.ws
 local err = backend.err
 
+local monitor = peripheral.wrap("top")
+
+local monSizeX, monSizeY = monitor.getSize()
+
+local display_box = window.create(monitor,1,1,monSizeX,monSizeY-4)
+local msg_box = window.create(monitor,1,monSizeY-3,monSizeX,monSizeY)
+
 local keyboard = peripheral.wrap("right")
+
 if keyboard then
     if keyboard.setFireNativeEvents then
         keyboard.setFireNativeEvents(true)
     end
 end
-
-local monitor = peripheral.wrap("top")
-
-monitor.setTextScale(0.5)
-monitor.clear()
-monitor.setCursorPos(1,1)
-
-local monSizeX, monSizeY = monitor.getSize()
-
-
-local display_box = window.create(monitor,1,1,monSizeX,monSizeY-4)
-local msg_box = window.create(monitor,1,monSizeY-3,monSizeX,monSizeY)
 
 local capabilities = {"standard-replies","message-tags","server-time","echo-message"}
 
@@ -31,17 +27,13 @@ local messages = {}
 
 local currently_typing = {}
 
-print("Username:")
-local username = read()
-print("Nickname:")
-local nickname = read()
-print("Realname (Does not have to be real):")
-local realname = read()
-
-
 local hasAccount = false
 local attemptRegistration = false
 local password = ""
+
+local username = ""
+local nickname = ""
+local realname = ""
 
 local function sendMessage(message,tags,textColor,bgColor)
     local old_term = term.redirect(display_box)
@@ -88,20 +80,6 @@ else
     end
 end
 
-if not ws then
-    error(err)
-else
-    if #capabilities > 0 then
-        for index, capability in pairs(capabilities) do
-            ws.send("CAP REQ :"..capability)
-        end
-        ws.send("CAP END")
-    end
-    ws.send("USER " .. username .. " unused unused " .. realname)
-    ws.send("NICK " .. nickname)
-    backend.accountData.nickname = nickname
-end
-
 local function interactNickServ()
     if hasAccount then
         print("Attempting login to "..nickname)
@@ -113,12 +91,6 @@ local function interactNickServ()
         attemptRegistration = false
     end
 end
-
-local function testFunc(message)
-    print("testFunc ->",message)
-end
-
---backend.registerSubscriber("onMessage",testFunc)
 
 local function typingReset()
     while true do
@@ -249,6 +221,31 @@ local function messageSendLoop()
             ws.send("PRIVMSG "..selected_channel.." :"..message)
         end
     end
+end
+
+monitor.setTextScale(0.5)
+monitor.clear()
+monitor.setCursorPos(1,1)
+
+print("Username:")
+username = read()
+print("Nickname:")
+nickname = read()
+print("Realname (Does not have to be real):")
+realname = read()
+
+if not ws then
+    error(err)
+else
+    if #capabilities > 0 then
+        for index, capability in pairs(capabilities) do
+            ws.send("CAP REQ :"..capability)
+        end
+        ws.send("CAP END")
+    end
+    ws.send("USER " .. username .. " unused unused " .. realname)
+    ws.send("NICK " .. nickname)
+    backend.accountData.nickname = nickname
 end
 
 parallel.waitForAll(receiverEventLoop,messageSendLoop,typingReset)
