@@ -50,21 +50,21 @@ local nickname = "ControlerExtended"
 local realname = "Hi, I am a bot!"
 
 local buttonToCommandMap = {
-    place = "Place",
-    placeUp = "PlaceUp",
-    placeDown = "PlaceDown",
+    place = "P",
+    placeUp = "PU",
+    placeDown = "PD",
 
-    dig = "Dig",
-    digUp = "DigUp",
-    digDown = "DigDown",
+    dig = "Di",
+    digUp = "DiU",
+    digDown = "DiD",
 
-    drop = "Drop 64",
-    dropUp = "DropUp 64",
-    dropDown = "DropDown 64",
+    drop = "Dp 64",
+    dropUp = "DpU 64",
+    dropDown = "DpD 64",
 
-    suck = "Suck 64",
-    suckUp = "SuckUp 64",
-    suckDown = "SuckDown 64"
+    suck = "S 64",
+    suckUp = "SU 64",
+    suckDown = "SD 64"
 }
 
 local function sendCommand(command)
@@ -123,11 +123,11 @@ end
 
 local function refreshData()
     sleep(0.3)
-    sendCommand("GetFuelLimit")
+    sendCommand("GFLim")
     sleep(0.3)
-    sendCommand("GetFuelLevel")
+    sendCommand("GFLev")
     sleep(0.3)
-    sendCommand("GetSelectedSlot")
+    sendCommand("GSelSlot")
     sleep(0.3)
     sendCommand("Inventory")
 end
@@ -145,9 +145,9 @@ local function drawScreen()
         elseif pressedButton == "selectRight" then
             moveSelector(1)
         elseif pressedButton == "select" then
-            sendCommand("Select "..tostring(selector))
+            sendCommand("Sel "..tostring(selector))
             sleep(0.1)
-            sendCommand("GetSelectedSlot")
+            sendCommand("GSelSlot")
         elseif pressedButton == "refresh" then
             refreshData()
         elseif pressedButton == "exit" then

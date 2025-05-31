@@ -1,4 +1,7 @@
 local backend = require("IRC_backend")
+local helper = backend.helper
+local turtUtil = require("turtUtil")
+turtUtil.loadData()
 
 local scanner = peripheral.find("geoScanner")
 
@@ -28,7 +31,7 @@ local function initPlugins()
             if not plugin.init then
                 error(path..file.." has no init!")
             end
-            plugin.init(ws)
+            plugin.init(backend.ws,backend.helper)
             table.insert(plugins,plugin)
             for name, functions in pairs(hooks) do
                 if plugin.hooks[name] then
@@ -43,26 +46,13 @@ local function initPlugins()
     end
 end
 
-local username = "turtle"
-local nickname = "Gumpai"
-local realname = "Hi, I am a bot!"
-
-ws.send("USER " .. username .. " unused unused " .. realname)
-ws.send("NICK " .. nickname)
-ws.send("MODE +B")
-backend.accountData.nickname = nickname
-
-local function sendResponse(destination,response)
-    if destination and response then
-        ws.send("NOTICE "..destination.." :"..response)
-    end
-end
-
 local function primaryFeedback()
     while true do
         local message = ws.receive()
         if message then
             local msg_data, message_destination, cmd, numeric, message_origin = backend.processRawMessage(message)
+            local pos = turtUtil.getPos()
+            local dir = turtUtil.getDirection()
             local origin_client, origin_nick
             if message_origin then
                 origin_client, origin_nick = backend.processMessageOrigin(message_origin)
@@ -85,18 +75,20 @@ local function primaryFeedback()
                     local validCommand = true
                     local success = false
 
-                    if command == "Forward" then
-                        success = turtle.forward()
-                    elseif command == "Backward" then
-                        success = turtle.back()
-                    elseif command == "Left" then
-                        success = turtle.turnLeft()
-                    elseif command == "Right" then
-                        success = turtle.turnRight()
-                    elseif command == "Up" then
-                        success = turtle.up()
-                    elseif command == "Down" then
-                        success = turtle.down()
+                    if command == "F" then
+                        success = turtUtil.forward()
+                    elseif command == "B" then
+                        success = turtUtil.back()
+                    elseif command == "L" then
+                        success = turtUtil.turnLeft()
+                    elseif command == "R" then
+                        success = turtUtil.turnRight()
+                    elseif command == "U" then
+                        success = turtUtil.up()
+                    elseif command == "D" then
+                        success = turtUtil.down()
+                    elseif command == "Pos" then
+                        success = "x="..tostring(pos.x)..",y="..tostring(pos.y)..",z="..tostring(pos.z)..",dir="..tostring(dir)
                     elseif command == "Stop" then
                         ws.send("QUIT told to stop")
                         ws.close()
@@ -105,13 +97,23 @@ local function primaryFeedback()
                         validCommand = false
                     end
                     if validCommand then
-                        sendResponse(origin_nick,command.." "..tostring(success))
+                        helper.sendNotice(origin_nick,command.." "..tostring(success))
                     end
                 end
             end
         end
     end
 end
+
+local username = "turtle"
+local nickname = "Gumpai"
+local realname = "Hi, I am a bot!"
+
+ws.send("USER " .. username .. " unused unused " .. realname)
+ws.send("NICK " .. nickname)
+ws.send("MODE Gumpai +B")
+ws.send("JOIN #null-turtle-cont")
+backend.accountData.nickname = nickname
 
 initPlugins()
 parallel.waitForAll(primaryFeedback,table.unpack(hooks.mainLoop))

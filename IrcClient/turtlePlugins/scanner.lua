@@ -28,10 +28,24 @@ local function sendMessage(destination,message)
 end
 
 local function processVisual(message_data, sender)
-    if message_data == "Visual" then
+    if message_data == "Vi" then
         if scanner.getOperationCooldown("scanBlocks") == 0 then
             local visual_data = scanner.scan(4)
-            local compressed_data = compress.compressBlockData(visual_data)
+            local compressed_data, compressed_lookup = compress.compressBlockData(visual_data)
+
+            local lookup_packets = {}
+            local lookup_packet_size = 412
+            local lookup_packet_count = #compressed_lookup/lookup_packet_size
+            lookup_packet_count = math.ceil(lookup_packet_count)
+
+            for i = 1, lookup_packet_count do
+                lookup_packets[i] = string.sub(compressed_lookup,(i*lookup_packet_size)-(lookup_packet_size-1),i*lookup_packet_size)
+            end
+            sendResponse(sender,"ViLS")
+            for i = 1, lookup_packet_count do
+                sendResponse(sender,"ViL "..lookup_packets[i])
+            end
+            sendResponse(sender,"ViLE")
             local packets = {}
             local packetSize = 412
             local packetCount = #compressed_data/packetSize
@@ -39,11 +53,11 @@ local function processVisual(message_data, sender)
             for i = 1, packetCount do
                 packets[i] = string.sub(compressed_data,(i*packetSize)-(packetSize-1),i*packetSize)
             end
-            sendResponse(sender,"VisualStart")
+            sendResponse(sender,"ViS")
             for i = 1, packetCount do
-                sendResponse(sender,"Visual "..packets[i])
+                sendResponse(sender,"Vi "..packets[i])
             end
-            sendResponse(sender,"VisualEnd")
+            sendResponse(sender,"ViE")
         end
     end
 end

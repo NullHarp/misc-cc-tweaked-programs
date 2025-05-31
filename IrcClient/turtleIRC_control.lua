@@ -10,11 +10,13 @@ local realname = "Hi, I am a bot!"
 
 ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
+
 backend.accountData.nickname = nickname
 
 local displayWindow = window.create(term.current(),1,11,15,9)
 
 local compressedVisualData = ""
+local compressedLookup = ""
 
 local vPacketCount = 0
 
@@ -33,7 +35,7 @@ local function drawMap(blockData,y_level)
     term.setBackgroundColor(colors.black)
     for i = 1, #blockData do
         if blockData[i].y == y_level then
-            if blockData[i].name ~= 1 then
+            if blockData[i].name ~= "minecraft:air" then
                 term.setTextColor(colors.white)
             else
                 term.setTextColor(colors.black)
@@ -78,14 +80,20 @@ local function receive()
                     local command = args[1]
                     local data = string.sub(msg_data,#command+2)
 
+                    if command == "ViLS" then
+                        compressedLookup = ""
+                    elseif command == "ViLE" then
 
-                    if command == "VisualStart" then
+                    elseif command == "ViL" then
+                        compressedLookup = compressedLookup..data
+                    end
+                    if command == "ViS" then
                         compressedVisualData = ""
                         vPacketCount = 0
-                    elseif command == "VisualEnd" then
-                        local visionData = compress.decompressBlockData(compressedVisualData)
+                    elseif command == "ViE" then
+                        local visionData = compress.decompressBlockData(compressedVisualData,compressedLookup)
                         drawMap(visionData,0)
-                    elseif command == "Visual" then
+                    elseif command == "Vi" then
                         vPacketCount = vPacketCount+1
                         --print("vPacket: "..tostring(vPacketCount).."/16")
                         --print(#data)
@@ -108,25 +116,25 @@ local function send()
         local event, key, is_held = os.pullEvent("key")
         if event then
             if key == keys.w then
-                sendCommand("Forward")
+                sendCommand("F")
             elseif key == keys.s then
-                sendCommand("Backward")
+                sendCommand("B")
             elseif key == keys.a then
-                sendCommand("Left")
+                sendCommand("L")
             elseif key == keys.d then
-                sendCommand("Right")
+                sendCommand("R")
             elseif key == keys.up then
-                sendCommand("Up")
+                sendCommand("U")
             elseif key == keys.down then
-                sendCommand("Down")
+                sendCommand("D")
             elseif key == keys.e then
-                sendCommand("DigUp")
+                sendCommand("DiU")
             elseif key == keys.t then
-                sendCommand("Dig")
+                sendCommand("Di")
             elseif key == keys.y then
-                sendCommand("DigDown")
+                sendCommand("DiD")
             elseif key == keys.r then
-                sendCommand("Visual")
+                sendCommand("Vi")
             elseif key == keys.enter then
                 sendCommand("Stop")
                 ws.send("QUIT")

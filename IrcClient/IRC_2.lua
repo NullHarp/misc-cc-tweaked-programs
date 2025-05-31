@@ -1,14 +1,35 @@
 local backend = require("IRC_backend")
+local specRead = require("specialRead")
+
+local utc_offset = -4
 
 local ws = backend.ws
 local err = backend.err
 
+local keyboard = peripheral.wrap("right")
+if keyboard then
+    if keyboard.setFireNativeEvents then
+        keyboard.setFireNativeEvents(true)
+    end
+end
+
 local monitor = peripheral.wrap("top")
+
 monitor.setTextScale(0.5)
 monitor.clear()
 monitor.setCursorPos(1,1)
 
-local capabilities = {"standard-replies"}
+local monSizeX, monSizeY = monitor.getSize()
+
+
+local display_box = window.create(monitor,1,1,monSizeX,monSizeY-4)
+local msg_box = window.create(monitor,1,monSizeY-3,monSizeX,monSizeY)
+
+local capabilities = {"standard-replies","message-tags","server-time","echo-message"}
+
+local messages = {}
+
+local currently_typing = {}
 
 print("Username:")
 local username = read()
@@ -22,15 +43,27 @@ local hasAccount = false
 local attemptRegistration = false
 local password = ""
 
-local function sendMessage(message,textColor,bgColor)
+local function sendMessage(message,tags,textColor,bgColor)
+    local old_term = term.redirect(display_box)
     if textColor then
-        monitor.setTextColor(colors[textColor])
+        term.setTextColor(colors[textColor])
     end
     if bgColor then
-        monitor.setTextColor(colors[bgColor])
+        term.setBackgroundColor(colors[bgColor])
     end
-    local old_term = term.redirect(monitor)
+    if tags then
+        if tags["time"] then
+            local date = backend.convertTimestamp(tags["time"],utc_offset)
+            local formated_date = date.hour..":"..date.minute
+            message = "<["..formated_date.."]> "..message
+        end
+    end
+
     print(message)
+
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clearLine()
     term.redirect(old_term)
 end
 
@@ -72,11 +105,11 @@ end
 local function interactNickServ()
     if hasAccount then
         print("Attempting login to "..nickname)
-        ws.send("privmsg NickServ IDENTIFY "..password)
+        ws.send("NS IDENTIFY "..password)
         hasAccount = false
     elseif attemptRegistration then
         print("Attempting to register "..nickname)
-        ws.send("privmsg NickServ REGISTER "..password)
+        ws.send("NS REGISTER "..password)
         attemptRegistration = false
     end
 end
@@ -87,33 +120,81 @@ end
 
 --backend.registerSubscriber("onMessage",testFunc)
 
+local function typingReset()
+    while true do
+        for name, time in pairs(currently_typing) do
+            if os.clock() - time > 10 then
+                currently_typing[name] = nil
+            end
+        end
+        sleep(0.1)
+    end
+end
+
 local function receiverEventLoop()
     while true do
+        local containsSensitiveInfo = false
         local message = ws.receive()
         if message then
-            local msg_data, message_destination, cmd, numeric, message_origin = backend.processRawMessage(message)
+            local msg_data, message_destination, cmd, numeric, message_origin, tags = backend.processRawMessage(message)
             local origin_client, origin_nick
             if message_origin then
                 origin_client, origin_nick = backend.processMessageOrigin(message_origin)
             end
-
+            --Checks if there are tags
+            if tags then
+                --Assuming tags exists, checks for the +typing client tag to show typing status
+                if tags["+typing"] then
+                    if tags["+typing"] == "active" then
+                        if origin_nick then
+                            currently_typing[origin_nick] = os.clock()
+                        end
+                    else
+                        if origin_nick then
+                            currently_typing[origin_nick] = nil
+                        end
+                    end
+                end
+            end
             if cmd and not numeric then
+                if origin_nick then
+                    if string.find(origin_nick,"NickServ") then
+                        if string.find(msg_data,"IDENTIFY") then
+                            containsSensitiveInfo = true
+                        end
+                    end
+                end
+
                 -- Special exception for this command because it comes from another client and has additional data
-                if cmd == "PRIVMSG" then
+                if cmd == "PRIVMSG" and not containsSensitiveInfo then
                     origin_nick = origin_nick or message_origin
 
-                    sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data)
+                    if string.find(msg_data,backend.accountData.nickname) then
+                        sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data,tags,"black","yellow")
+                    else
+                        sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data,tags)
+                    end
+                elseif cmd == "NOTICE" then
+                    if origin_client then
+                        sendMessage(message_destination.." | [NOTICE] <"..origin_nick.."> "..msg_data,tags)
+                    else
+                        sendMessage(message_destination.." | [NOTICE] "..msg_data,tags)
+                    end
                 elseif cmd == "PING" then
                     if not backend.accountData.awaitingFirstPongResponse then
                         interactNickServ()
                     end
                 elseif cmd == "QUIT" then
-                    sendMessage(origin_nick.." has left. Reason: "..msg_data)
+                    sendMessage(origin_nick.." has left. Reason: "..msg_data,tags)
+                elseif cmd == "JOIN" then
+                    sendMessage(origin_nick.." has joined the chat!",tags)
                 elseif message_destination then
                     if origin_nick then
-                        sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data)
+                        if #msg_data > 0 then
+                            sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data,tags)
+                        end
                     else
-                        sendMessage(message_destination.." | ["..cmd.."] "..msg_data)
+                        sendMessage(message_destination.." | ["..cmd.."] "..msg_data,tags)
                     end
                 else
                     print("Command: "..message)
@@ -121,9 +202,9 @@ local function receiverEventLoop()
             end
             if numeric then
                 if message_destination and cmd then
-                    sendMessage(message_destination.." | ["..cmd.."] "..msg_data)
+                    sendMessage(message_destination.." | ["..cmd.."] "..msg_data,tags)
                 elseif message_destination then 
-                    sendMessage(message_destination.." | "..msg_data)
+                    sendMessage(message_destination.." | "..msg_data,tags)
                 else
                     print("Numeric: "..message)
                 end
@@ -136,7 +217,14 @@ local selected_channel = ""
 
 local function messageSendLoop()
     while true do
-        local message = read()
+        msg_box.clear()
+        msg_box.setCursorPos(1,1)
+        for name, status in pairs(currently_typing) do
+            msg_box.write(name.."... ")
+        end
+        msg_box.setCursorPos(1,3)
+        msg_box.write("Message "..selected_channel..": ")
+        local message = specRead.customRead(msg_box)
         if string.sub(message,1,1) == "/" then
             local words = string.gmatch(message, "%S+")
             local command = string.sub(words(),2)
@@ -154,10 +242,10 @@ local function messageSendLoop()
                 ws.send(string.sub(message,2))
             end
         else
-            sendMessage(nickname.." -> "..selected_channel.." | "..message)
+            --sendMessage(selected_channel.." | <"..nickname.."> "..message)
             ws.send("PRIVMSG "..selected_channel.." :"..message)
         end
     end
 end
 
-parallel.waitForAll(receiverEventLoop,messageSendLoop)
+parallel.waitForAll(receiverEventLoop,messageSendLoop,typingReset)

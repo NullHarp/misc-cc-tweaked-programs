@@ -1,29 +1,11 @@
 local ws = nil
-local chatBox = nil
+local helper = {}
 
 local hooks = {
     onMessage = {
 
     }
 }
-
----Should ONLY be used for automatic-replies
----@param destination any
----@param response any
-local function sendResponse(destination,response)
-    if destination and response then
-        ws.send("NOTICE "..destination.." :"..response)
-    end
-end
-
----Should ONLY be used for initiating-conversation
----@param destination any
----@param message any
-local function sendMessage(destination,message)
-    if destination and message then
-        ws.send("PRIVMSG "..destination.." :"..message)
-    end
-end
 
 local function getInventory()
     local slots = {}
@@ -53,7 +35,7 @@ local function extendedCommands(message_data,sender)
         table.insert(args,arg)
     end
 
-    local command = args[1]
+    local command = args[1] or ""
     local data = string.sub(message_data,#command+2)
 
     local count
@@ -63,39 +45,39 @@ local function extendedCommands(message_data,sender)
     end
 
     local generic_lookup = {
-        Place = turtle.place,
-        PlaceUp = turtle.placeUp,
-        PlaceDownn = turtle.placeDown,
+        P = turtle.place,
+        PU = turtle.placeUp,
+        PD = turtle.placeDown,
 
-        Dig = turtle.dig,
-        DigUp = turtle.digUp,
-        DigDown = turtle.digDown,
+        Di = turtle.dig,
+        DiU = turtle.digUp,
+        DiD = turtle.digDown,
 
-        Inspect = turtle.inspect,
-        InspectUp = turtle.inspectUp,
-        InspectDown = turtle.inspectDown,
+        I = turtle.inspect,
+        IU = turtle.inspectUp,
+        ID = turtle.inspectDown,
 
-        Suck = turtle.suck,
-        SuckUp = turtle.suckUp,
-        SuckDown = turtle.suckDown,
+        S = turtle.suck,
+        SU = turtle.suckUp,
+        SD = turtle.suckDown,
 
-        Drop = turtle.drop,
-        DropUp = turtle.dropUp,
-        DropDown = turtle.dropDown,
+        Dp = turtle.drop,
+        DpU = turtle.dropUp,
+        DpD = turtle.dropDown,
 
-        Refuel = turtle.refuel,
+        Rf = turtle.refuel,
 
-        GetFuelLevel = turtle.getFuelLevel,
-        GetFuelLimit = turtle.getFuelLimit,
+        GFLev = turtle.getFuelLevel,
+        GFLim = turtle.getFuelLimit,
 
-        GetSelectedSlot = turtle.getSelectedSlot,
+        GSelSlot = turtle.getSelectedSlot,
 
-        Select = turtle.select,
-        TransferTo = turtle.transferTo
+        Sel = turtle.select,
+        TTo = turtle.transferTo
     }
 
     if generic_lookup[command] then
-        local result,result2 = generic_lookup[command](count)
+        local success, result,result2 = pcall(generic_lookup[command],count)
         if result2 then
             if result2["tags"] then
                 result2 = result2.name
@@ -104,15 +86,21 @@ local function extendedCommands(message_data,sender)
             result2 = ""
         end
 
-        sendResponse(sender,command.." "..tostring(result).." "..tostring(result2))
+        if success then
+            helper.sendNotice(sender,command.." :SUCCESS "..tostring(result).." "..tostring(result2))
+        else
+            helper.sendNotice(sender,command.." :FAIL "..tostring(result).." "..tostring(result2))
+        end
     elseif command == "Inventory" then
         local compact_inv = getInventory()
-        sendResponse(sender,command.." "..compact_inv)
+        helper.sendNotice(sender,command.." "..compact_inv)
     end
 end
 
-local function init(webSock)
+local function init(webSock, helper_functions)
     ws = webSock
+    helper = helper_functions
+
     print("Initalizing Extended Functionality plugin!")
     table.insert(hooks.onMessage,extendedCommands)
 end
