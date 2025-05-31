@@ -85,7 +85,7 @@ local function removePrefix(msg)
     return msg
 end
 
----Processes provided message to parse any tags
+---Processes tags from a message-tags capability message
 ---@param raw_message string
 ---@return table tags A table containing all tags within the message (if any)
 ---@return integer The length of the raw tags message, before parsing
@@ -116,6 +116,30 @@ local function processTags(raw_message)
     return tags, #tag_string
 end
 
+---Processes a standard-replies capability message
+---@param message string
+---@return string type FAIL, NOTE, WARN
+---@return string command The specific command
+---@return string code The code
+---@return string description Human readable description
+local function processStandardReply(message)
+    local words = string.gmatch(message, "%S+")
+    local args = {}
+
+    for arg in words do
+        table.insert(args,arg)
+    end
+
+    local type = args[1]
+    local command = args[2]
+    local code = args[3]
+
+    local description_start = string.find(message,":")
+    local description = string.sub(message,description_start+1)
+
+    return type, command, code, description
+end
+
 ---Processes numerics, a special type of message sent by the server in response to certain actions
 ---@param numeric number NYI
 ---@param message string The message to process the numeric of
@@ -141,6 +165,8 @@ local function numericsProcessor(numeric, message,message_orgin)
         message_destination = args[1]
         table.remove(args,1)
     end
+    --If there is not a ':' (meaning we are not at the start of the message content) we pull this out as the command resp,
+    --because some numerics have a associated command they are responding to
     if string.sub(args[1],1,1) ~= ":" then
         if args[1] ~= message_destination and args[1] ~= message_orgin then
             command_resp = args[1]
@@ -148,7 +174,7 @@ local function numericsProcessor(numeric, message,message_orgin)
         end
     end
 
-    --Is this the start of the 'message_origin'
+    --Is this the start of the 'message_origin', the message origin is who sent the message, this may be the server, or a message being sent from another client
     if string.sub(args[1],1,1) == ":" then
         local spacing = 0
         if message_destination then
@@ -284,4 +310,4 @@ local function processRawMessage(msg)
     end
 end
 
-return {helper = helper, convertTimestamp = convertTimestamp, accountData = accountData,numericsProcessor = numericsProcessor, commandProcessor = commandProcessor, processRawMessage = processRawMessage, processMessageOrigin = processMessageOrigin, ws = ws, err=err}
+return {processStandardReply = processStandardReply, helper = helper, convertTimestamp = convertTimestamp, accountData = accountData,numericsProcessor = numericsProcessor, commandProcessor = commandProcessor, processRawMessage = processRawMessage, processMessageOrigin = processMessageOrigin, ws = ws, err=err}
