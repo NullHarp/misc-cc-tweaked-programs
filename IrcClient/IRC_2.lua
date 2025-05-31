@@ -59,27 +59,6 @@ local function sendMessage(message,tags,textColor,bgColor)
     term.redirect(old_term)
 end
 
-print("Do you have a registered nick? Y/n:")
-local registeredNick = string.lower(read())
-if registeredNick == "y" or registeredNick == "yes" then
-    print("Please insert password:")
-    password = read("*")
-    hasAccount = true
-else
-    print("Do you want to register your nick? Y/n:")
-    local wantsRegister = string.lower(read())
-    if wantsRegister == "y" or wantsRegister == "yes" then
-        password = read("*")
-        print("Confirm password:")
-        local confirmPassword = read("*")
-        if password ~= confirmPassword then
-            error("Passwords don't match.")
-        end
-        print("Registration will be attempted for the nick: "..nickname)
-        attemptRegistration = true
-    end
-end
-
 local function interactNickServ()
     if hasAccount then
         print("Attempting login to "..nickname)
@@ -233,6 +212,27 @@ print("Nickname:")
 nickname = read()
 print("Realname (Does not have to be real):")
 realname = read()
+
+print("Do you have a registered nick? Y/n:")
+local registeredNick = string.lower(read())
+if registeredNick == "y" or registeredNick == "yes" then
+    print("Please insert password:")
+    password = read("*")
+    hasAccount = true
+else
+    print("Do you want to register your nick? Y/n:")
+    local wantsRegister = string.lower(read())
+    if wantsRegister == "y" or wantsRegister == "yes" then
+        password = read("*")
+        print("Confirm password:")
+        local confirmPassword = read("*")
+        if password ~= confirmPassword then
+            error("Passwords don't match.")
+        end
+        print("Registration will be attempted for the nick: "..nickname)
+        attemptRegistration = true
+    end
+end
 
 if not ws then
     error(err)
