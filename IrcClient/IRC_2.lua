@@ -174,6 +174,9 @@ local function receiverEventLoop()
                     else
                         sendMessage(message_destination.." | <"..origin_nick.."> "..msg_data,tags)
                     end
+                elseif cmd == "FAIL" or cmd == "NOTE" or cmd == "WARN" then
+                    local type, cmand, code, description = backend.processStandardReply(cmd.." "..msg_data)
+                    sendMessage(message_destination.." | ["..type.."] ["..cmand.."] ["..code.."] "..description)
                 elseif cmd == "NOTICE" then
                     if origin_client then
                         sendMessage(message_destination.." | [NOTICE] <"..origin_nick.."> "..msg_data,tags)
