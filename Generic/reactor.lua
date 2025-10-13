@@ -357,4 +357,5 @@ return {
     shutdownReactor = shutdownReactor,
     updateCoreLogic = updateCoreLogic,
     getReactorInfo = getReactorInfo,
+    toggleFailSafe = toggleFailSafe,
 }

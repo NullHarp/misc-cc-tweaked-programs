@@ -3,8 +3,6 @@ local helper = backend.helper
 local turtUtil = require("turtUtil")
 turtUtil.loadData()
 
-local scanner = peripheral.find("geoScanner")
-
 local ws = backend.ws
 
 local plugins = {}
@@ -58,6 +56,7 @@ local function primaryFeedback()
                 origin_client, origin_nick = backend.processMessageOrigin(message_origin)
             end
             executeHooks("onMessage",msg_data, origin_nick)
+
             if cmd and not numeric then
                 if cmd == "PRIVMSG" then
                     print(msg_data)
@@ -112,7 +111,6 @@ local realname = "Hi, I am a bot!"
 ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
 ws.send("MODE Gumpai +B")
-ws.send("JOIN #null-turtle-cont")
 backend.accountData.nickname = nickname
 
 initPlugins()

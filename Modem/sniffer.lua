@@ -61,10 +61,10 @@ local function trilaterate(points, distances)
     return solve_linear_system(A, b)
 end
 
-local modem_0 = peripheral.wrap("modem_0")
-local modem_1 = peripheral.wrap("modem_1")
-local modem_2 = peripheral.wrap("modem_2")
-local modem_3 = peripheral.wrap("modem_3")
+local modem_0 = peripheral.wrap("modem_9")
+local modem_1 = peripheral.wrap("modem_10")
+local modem_2 = peripheral.wrap("modem_11")
+local modem_3 = peripheral.wrap("modem_12")
 
 modem_0.open(port)
 modem_1.open(port)
@@ -72,10 +72,10 @@ modem_2.open(port)
 modem_3.open(port)
 local data_points = 0
 local points = {
-    {104, 0, 263},  -- Point 0 (x1, y1, z1)
-    {99, 0, 263},  -- Point 1 (x2, y2, z2)
-    {99, 0, 258},  -- Point 2 (x3, y3, z3)
-    {99, 4, 263}   -- Point 3 (x4, y4, z4)
+    {4500, 83, 4048},  -- Point 0 (x1, y1, z1)
+    {4496, 83, 4048},  -- Point 1 (x2, y2, z2)
+    {4500, 83, 4044},  -- Point 2 (x3, y3, z3)
+    {4500, 87, 4048}   -- Point 3 (x4, y4, z4)
 }
 local distances = {}
 while true do

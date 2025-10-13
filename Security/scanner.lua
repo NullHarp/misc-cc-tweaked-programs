@@ -3,9 +3,8 @@ local chatbox = peripheral.find("chatBox") or error("Chat box not found!",0)
 local monitor = peripheral.find("monitor") or error("Monitor not found!",0)
 
 local alertList = {
-    "VoidViolin",
+    "NullHarp",
     "Blista__Compact",
-    "BigCrazyClaw",
     "awesomehome7_dj"
 }
 

@@ -1,5 +1,4 @@
 local reactor = require("reactor")
-local pid = require("PID")
 
 local flow_gate_intake = reactor.intake
 local flow_gate_outlet = reactor.outlet
@@ -12,14 +11,6 @@ local energyReserve = 1000000000
 
 local injectionRate = 1000000
 local extractionRate = 0
-
-local targetShield = 60
-local targetSaturation = 20
-local targetTemperature = 7000
-
-local injectionPid = pid.makePID(0.001,0.01,0.05,targetShield*1000000,0)
-local extractionPid = pid.makePID(0.003,0.1,0.05,targetSaturation*10000000,0)
-local temperaturePid = pid.makePID(0.006,0.1,0.05,targetTemperature,20)
 
 local isNetPositive = false
 
@@ -115,7 +106,7 @@ local function draw(data)
     term.setCursorPos(1,1)
     local rFuel, cFuel = data.maxFuelConversion - data.fuelConversion, data.fuelConversion
     printState("State:",data.status)
-    print(((cFuel / (cFuel+rFuel)) * 1.3) - 0.3)
+    print("ConvLVL:",((cFuel / (cFuel+rFuel)) * 1.3) - 0.3)
     printTemp("Temp:",math.floor(data.temperature))
     print()
     print("Sat:",tostring(roundDecimal(data.energySaturation/data.maxEnergySaturation,100)*100).."%")
@@ -139,6 +130,7 @@ end
 
 local data = reactor.getReactorInfo()
 
+reactor.toggleFailSafe()
 reactor.setFuel(fuelNuggets * 16)
 draw(data)
 reactor.attemptInit()
@@ -169,24 +161,9 @@ while true do
         injectionRate = 500000
         extractionRate = 0
     end
-    if data.status == "RUNNING" or data.status == "STOPPING" then
-        -- Update PID inputs
-        injectionPid.current = data.fieldStrength
-        extractionPid.current = data.energySaturation
-        temperaturePid.current = data.temperature
-        -- Get PID outputs
-        local resInj = pid.PID(injectionPid)
-        local resExt = pid.PID(extractionPid)
-        local resSat = pid.PID(temperaturePid)
-
-        extractionPid.target = math.min(math.max(extractionPid.target - resSat*100, 10*10000000), 96*10000000)
-    
-        injectionRate = math.max(injectionRate + resInj, 0)
-        if data.status == "STOPPING" then
-            extractionRate = 0
-        else
-            extractionRate = math.max(extractionRate - resExt, 0)
-        end
+    if data.status == "RUNNING" then
+        injectionRate = 1200000
+        extractionRate = 2500000
     end
     if data.status == "BEYOND_HOPE" then
         draw(data)
