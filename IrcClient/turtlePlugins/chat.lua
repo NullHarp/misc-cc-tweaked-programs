@@ -25,7 +25,8 @@ local function chatSend(message_data,sender)
         local data = string.sub(message_data,#command+2)
 
         if command == "Chat" then
-            chatBox.sendMessage(data,"Gumpai","<>")
+            local name = helper.getName()
+            chatBox.sendMessage(data,name,"<>")
         end
     end
 end
@@ -33,7 +34,11 @@ end
 local function chatRead()
     while true do
         local event, username, message, uuid, isHidden = os.pullEvent("chat")
-        --helper.sendMessage("Null","Chat "..username..":"..message)
+        if isHidden then
+            helper.sendMessage("Null","Chat "..username.." whispers: "..message)
+        else
+            helper.sendMessage("Null","Chat "..username..": "..message)
+        end
     end
 end
 

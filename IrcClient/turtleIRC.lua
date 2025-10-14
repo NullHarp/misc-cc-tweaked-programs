@@ -1,3 +1,5 @@
+local name = "Gumpai"
+
 local backend = require("IRC_backend")
 local helper = backend.helper
 local turtUtil = require("turtUtil")
@@ -17,6 +19,11 @@ local function executeHooks(hookName,...)
     end
 end
 
+local function getName()
+    return name
+end
+helper.getName = getName
+
 local function initPlugins()
     local path = "/plugins/"
     local files = fs.list(path)
@@ -29,7 +36,7 @@ local function initPlugins()
             if not plugin.init then
                 error(path..file.." has no init!")
             end
-            plugin.init(backend.ws,backend.helper)
+            plugin.init(backend.ws,helper)
             table.insert(plugins,plugin)
             for name, functions in pairs(hooks) do
                 if plugin.hooks[name] then
@@ -105,12 +112,12 @@ local function primaryFeedback()
 end
 
 local username = "turtle"
-local nickname = "Gumpai"
+local nickname = name
 local realname = "Hi, I am a bot!"
 
 ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
-ws.send("MODE Gumpai +B")
+ws.send("MODE "..name.." +B")
 backend.accountData.nickname = nickname
 
 initPlugins()

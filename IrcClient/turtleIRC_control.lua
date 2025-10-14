@@ -4,6 +4,21 @@ local compress = require("compressor")
 local ws = backend.ws
 local err = backend.err
 
+local target, isPlethora = ...
+
+
+local modules = nil
+local canvas = nil
+local design = nil
+
+if isPlethora then
+    modules = peripheral.wrap("back")
+    canvas = modules.canvas3d()
+    canvas.clear()
+    design = canvas.create()
+end
+
+
 local username = "turtleCont"
 local nickname = "Controler"
 local realname = "Hi, I am a bot!"
@@ -50,6 +65,20 @@ local function drawMap(blockData,y_level)
     term.setTextColor(colors.white)
 end
 
+local function draw3dMap(blockData)
+    design.clear()
+    for i,data in pairs(blockData) do
+        data.x = data.x
+        data.y = data.y
+        data.z = data.z
+
+        local error = pcall(design.addItem,{x=data.x,y=data.y,z=data.z},data.name)
+        if not error then
+            error = pcall(design.addItem,{x=data.x,y=data.y,z=data.z},"minecraft:golden_apple")
+        end
+    end
+end
+
 local function displayText(...)
     displayWindow.clear()
     displayWindow.setCursorPos(1,1)
@@ -92,7 +121,11 @@ local function receive()
                         vPacketCount = 0
                     elseif command == "ViE" then
                         local visionData = compress.decompressBlockData(compressedVisualData,compressedLookup)
-                        drawMap(visionData,0)
+                        if isPlethora then
+                            draw3dMap(visionData)
+                        else
+                            drawMap(visionData,0)
+                        end
                     elseif command == "Vi" then
                         vPacketCount = vPacketCount+1
                         --print("vPacket: "..tostring(vPacketCount).."/16")
@@ -108,7 +141,7 @@ local function receive()
 end
 
 local function sendCommand(command)
-    ws.send("PRIVMSG Gumpai :"..command)
+    ws.send("PRIVMSG "..target.." :"..command)
 end
 
 local function send()
@@ -136,7 +169,7 @@ local function send()
             elseif key == keys.r then
                 sendCommand("Vi")
             elseif key == keys.enter then
-                sendCommand("Stop")
+                --sendCommand("Stop")
                 ws.send("QUIT")
                 ws.close()
                 error("Closing")
