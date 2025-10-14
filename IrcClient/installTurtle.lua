@@ -25,4 +25,4 @@ installFile("IrcClient/turtlePlugins/extendedFunctionality.lua","plugins/extende
 local file = fs.open("startup.lua","w")
 file.write("shell.run('turtleIRC.lua')")
 
-os.reboot()
+--os.reboot()
