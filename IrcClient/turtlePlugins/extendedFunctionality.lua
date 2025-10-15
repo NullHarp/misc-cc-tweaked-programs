@@ -76,24 +76,26 @@ local function extendedCommands(message_data,sender)
         TTo = turtle.transferTo
     }
 
-    if generic_lookup[command] then
-        local success, result,result2 = pcall(generic_lookup[command],count)
-        if result2 then
-            if result2["tags"] then
-                result2 = result2.name
+    if command and sender == "Null" then
+        if generic_lookup[command] then
+            local success, result,result2 = pcall(generic_lookup[command],count)
+            if result2 then
+                if result2["tags"] then
+                    result2 = result2.name
+                end
+            else
+                result2 = ""
             end
-        else
-            result2 = ""
-        end
 
-        if success then
-            helper.sendNotice(sender,command.." :SUCCESS "..tostring(result).." "..tostring(result2))
-        else
-            helper.sendNotice(sender,command.." :FAIL "..tostring(result).." "..tostring(result2))
+            if success then
+                helper.sendNotice(sender,command.." :SUCCESS "..tostring(result).." "..tostring(result2))
+            else
+                helper.sendNotice(sender,command.." :FAIL "..tostring(result).." "..tostring(result2))
+            end
+        elseif command == "Inventory" then
+            local compact_inv = getInventory()
+            helper.sendNotice(sender,command.." "..compact_inv)
         end
-    elseif command == "Inventory" then
-        local compact_inv = getInventory()
-        helper.sendNotice(sender,command.." "..compact_inv)
     end
 end
 
