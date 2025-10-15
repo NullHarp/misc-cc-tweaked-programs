@@ -7,8 +7,6 @@ local hooks = {
     }
 }
 
-local chatBox = nil
-
 local function executeFunc(message_data,sender)
     local words = string.gmatch(message_data, "%S+")
     local args = {}
@@ -53,6 +51,8 @@ local function init(webSock, helper_functions)
 
     print("Initalizing Execution plugin!")
     table.insert(hooks.onMessage,executeFunc)
+    
+    _G.shell = shell
 end
 
 return {init = init, hooks = hooks}
