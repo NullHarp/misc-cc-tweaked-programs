@@ -22,7 +22,7 @@ local function useDetector(message_data,sender)
 
     local command = args[1]
     if command then
-        if command == "gP" then -- GetPlayerPos
+        if command == "gPP" then -- GetPlayerPos
             local name = helper.getName()
             if type(args[2]) == "string" then
                 local data = playerDetector.getPlayerPos(args[2])
@@ -31,6 +31,17 @@ local function useDetector(message_data,sender)
                 else
                     helper.sendMessage("Null","gP :FAIL "..args[2].." Player not found")
                 end
+            end
+        elseif command == "lP" then -- list players
+            local data = playerDetector.getOnlinePlayers()
+            if #data > 0 then
+                local list = ""
+                for _, v in pairs(data) do
+                    list = list..v..";"
+                end
+                helper.sendMessage("Null","lP :SUCCESS "..list)
+            else
+                helper.sendMessage("Null","lP :FAIL No players online!")
             end
         end
     end
