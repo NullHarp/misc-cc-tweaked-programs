@@ -124,11 +124,13 @@ local function digDown()
 end
 
 ---Turns the turtle left
-local function turnLeft()
+local function turnLeft(disable_autobreak)
     if turtle.turnLeft() then
         direction = (direction - 1) % 4
         saveData()
-        dig()
+        if not disable_autobreak then
+            dig()
+        end
         return true
     end
     return false
@@ -136,11 +138,13 @@ end
 
 ---Turns the turtle right
 ---@return boolean success
-local function turnRight()
+local function turnRight(disable_autobreak)
     if turtle.turnRight() then
         direction = (direction + 1) % 4
         saveData()
-        dig()
+        if not disable_autobreak then
+            dig()
+        end
         return true
     end
     return false

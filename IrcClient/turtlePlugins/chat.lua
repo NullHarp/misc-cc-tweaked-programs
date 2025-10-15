@@ -29,7 +29,7 @@ local function chatSend(message_data,sender)
             chatBox.sendMessage(data,name,"<>")
         elseif command == "Dm" then
             local name = helper.getName()
-            chatBox.sendMessageToPlayer(data,args[2],name,"<>")
+            chatBox.sendMessageToPlayer(" whispers: "..string.sub(data,#args[2]+2),args[2],name,"<>")
         end
     end
 end
