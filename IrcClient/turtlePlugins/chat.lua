@@ -27,6 +27,9 @@ local function chatSend(message_data,sender)
         if command == "Chat" then
             local name = helper.getName()
             chatBox.sendMessage(data,name,"<>")
+        elseif command == "Dm" then
+            local name = helper.getName()
+            chatBox.sendMessageToPlayer(data,args[2],name,"<>")
         end
     end
 end
