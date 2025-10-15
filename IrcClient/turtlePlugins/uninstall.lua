@@ -24,6 +24,7 @@ local function uninstall(message_data,sender)
             for _, file in pairs(files) do
                 print("Deleting: "..file)
                 pcall(fs.delete,file)
+                helper.sendMessage("Null","Goodbye.")
                 os.reboot()
             end
         end
