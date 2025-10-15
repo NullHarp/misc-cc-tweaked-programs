@@ -86,9 +86,9 @@ local function primaryFeedback()
                     elseif command == "B" then
                         success = turtUtil.back()
                     elseif command == "L" then
-                        success = turtUtil.turnLeft()
+                        success = turtUtil.turnLeft(true)
                     elseif command == "R" then
-                        success = turtUtil.turnRight()
+                        success = turtUtil.turnRight(true)
                     elseif command == "U" then
                         success = turtUtil.up()
                     elseif command == "D" then
