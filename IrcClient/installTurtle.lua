@@ -21,6 +21,7 @@ installFile("IrcClient/compressor.lua","compressor.lua")
 installFile("IrcClient/turtlePlugins/chat.lua","plugins/chat.lua")
 installFile("IrcClient/turtlePlugins/scanner.lua","plugins/scanner.lua")
 installFile("IrcClient/turtlePlugins/extendedFunctionality.lua","plugins/extendedFunctionality.lua")
+installFile("IrcClient/turtlePlugins/execution.lua","plugins/execution.lua")
 
 local file = fs.open("startup.lua","w")
 file.write("shell.run('turtleIRC.lua')")
