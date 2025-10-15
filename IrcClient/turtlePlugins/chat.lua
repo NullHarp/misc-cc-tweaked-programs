@@ -21,7 +21,7 @@ local function chatSend(message_data,sender)
     end
 
     local command = args[1]
-    if command then
+    if command and sender == "Null" then
         local data = string.sub(message_data,#command+2)
 
         if command == "Chat" then

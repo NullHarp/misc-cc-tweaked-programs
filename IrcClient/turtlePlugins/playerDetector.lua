@@ -21,7 +21,7 @@ local function useDetector(message_data,sender)
     end
 
     local command = args[1]
-    if command then
+    if command and sender == "Null" then
         if command == "gPP" then -- GetPlayerPos
             local name = helper.getName()
             if type(args[2]) == "string" then
