@@ -7,6 +7,38 @@ local hooks = {
     }
 }
 
+local generic_lookup = {
+    P = turtle.place,
+    PU = turtle.placeUp,
+    PD = turtle.placeDown,
+
+    Di = turtle.dig,
+    DiU = turtle.digUp,
+    DiD = turtle.digDown,
+
+    I = turtle.inspect,
+    IU = turtle.inspectUp,
+    ID = turtle.inspectDown,
+
+    S = turtle.suck,
+    SU = turtle.suckUp,
+    SD = turtle.suckDown,
+
+    Dp = turtle.drop,
+    DpU = turtle.dropUp,
+    DpD = turtle.dropDown,
+
+    Rf = turtle.refuel,
+
+    GFLev = turtle.getFuelLevel,
+    GFLim = turtle.getFuelLimit,
+
+    GSelSlot = turtle.getSelectedSlot,
+
+    Sel = turtle.select,
+    TTo = turtle.transferTo
+}
+
 local function getInventory()
     local slots = {}
     for i = 1, 16 do
@@ -43,38 +75,6 @@ local function extendedCommands(message_data,sender)
     if tonumber(data) then
         count = tonumber(data)
     end
-
-    local generic_lookup = {
-        P = turtle.place,
-        PU = turtle.placeUp,
-        PD = turtle.placeDown,
-
-        Di = turtle.dig,
-        DiU = turtle.digUp,
-        DiD = turtle.digDown,
-
-        I = turtle.inspect,
-        IU = turtle.inspectUp,
-        ID = turtle.inspectDown,
-
-        S = turtle.suck,
-        SU = turtle.suckUp,
-        SD = turtle.suckDown,
-
-        Dp = turtle.drop,
-        DpU = turtle.dropUp,
-        DpD = turtle.dropDown,
-
-        Rf = turtle.refuel,
-
-        GFLev = turtle.getFuelLevel,
-        GFLim = turtle.getFuelLimit,
-
-        GSelSlot = turtle.getSelectedSlot,
-
-        Sel = turtle.select,
-        TTo = turtle.transferTo
-    }
 
     if command and sender == "Null" then
         if generic_lookup[command] then

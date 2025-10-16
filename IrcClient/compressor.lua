@@ -1,4 +1,5 @@
 local base64 = require("base64")
+local rle = require("RLE")
 
 local function compressBlockData(blockData)
     local block_name_lookup = {}
@@ -49,12 +50,13 @@ local function compressBlockData(blockData)
         table.insert(compressed, block_to_char[block.name])
     end
 
-    return table.concat(compressed),
+    return rle.encode(table.concat(compressed)),
     table.concat(block_name_lookup,";")
 end
 
 
 local function decompressBlockData(compressedBlocks, compressedBlockLookup)
+    compressedBlocks = rle.decode(compressedBlocks)
     local block_lookup = {}
     for name in string.gmatch(compressedBlockLookup, "([^;]+)") do
         table.insert(block_lookup,name)
