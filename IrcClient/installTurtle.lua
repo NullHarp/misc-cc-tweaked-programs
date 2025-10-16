@@ -8,6 +8,7 @@ local function installFile(sub_url,file_name)
 end
 
 installFile("API/base64.lua","base64.lua")
+installFile("API/RLE.lua","RLE.lua")
 
 installFile("Turtle/API/turtUtil.lua","turtUtil.lua")
 installFile("Turtle/generatePos.lua","generatePos.lua")
