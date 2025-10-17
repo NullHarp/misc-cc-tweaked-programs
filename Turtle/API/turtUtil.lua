@@ -1,8 +1,8 @@
 ---Represents which direction the turtle is facing
 ---0 = NORTH / NegZ
----1 = WEST / NegX
+---3 = WEST / NegX
 ---2 = SOUTH / PosZ
----3 = EAST / PosX
+---1 = EAST / PosX
 local direction = 0
 local pos = {x=0,y=0,z=0}
 
