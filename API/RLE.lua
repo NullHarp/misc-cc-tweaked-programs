@@ -1,6 +1,6 @@
 local base64 = require("base64")
 
-local test_data = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+local test_data = "ABC"
 
 local function encode(data)
     local result = ""
@@ -17,7 +17,7 @@ local function encode(data)
             elseif running_total > 63 then
                 local len = math.floor(running_total/64)
                 local len_2 = running_total%64
-                encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
+                encoded_str = base64.encode(len)..base64.encode(len_2)
             else
                 encoded_str = "A"..base64.encode(running_total)
             end

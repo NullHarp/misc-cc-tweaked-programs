@@ -28,7 +28,7 @@ ws.send("NICK " .. nickname)
 
 backend.accountData.nickname = nickname
 
-local displayWindow = window.create(term.current(),1,1,3,13)
+local displayWindow = term.current()
 
 local compressedVisualData = ""
 local compressedLookup = ""
