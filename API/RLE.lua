@@ -15,7 +15,7 @@ local function encode(data)
             if running_total > 64 then
                 local len = math.floor(running_total/64)
                 local len_2 = running_total%64
-                encoded_str = base64.encode(len)..base64.encode(len_2+1)
+                encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
             else
                 encoded_str = "A"..base64.encode(running_total)
             end
@@ -36,7 +36,7 @@ local function decode(data)
         local data_char = string.sub(data,i+2,i+2)
         local len = base64.decode(len_char)
         local len_2 = base64.decode(len_char_2)
-        local decomp = string.rep(data_char,((len)*64)+len_2-1)
+        local decomp = string.rep(data_char,((len-1)*64)+len_2-1)
         print(len_char,len_char_2)
         print(((len-1)*64)+len_2-1)
         result = result .. decomp
