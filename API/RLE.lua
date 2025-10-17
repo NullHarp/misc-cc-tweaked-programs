@@ -8,13 +8,13 @@ local function encode(data)
     local last_char = " "
     for i = 1, #data+1 do
         local data_char = string.sub(data,i,i)
-        if data_char == last_char and running_total < 4095 then
+        if data_char == last_char and running_total < 4096 then
             running_total = running_total + 1
         elseif last_char ~= " " then
             local encoded_str = ""
-            if running_total == 63 then
+            if running_total == 64 then
                 encoded_str = "A/"
-            elseif running_total > 63 then
+            elseif running_total > 64 then
                 local len = math.floor(running_total/64)
                 local len_2 = running_total%64
                 encoded_str = base64.encode(len)..base64.encode(len_2)
