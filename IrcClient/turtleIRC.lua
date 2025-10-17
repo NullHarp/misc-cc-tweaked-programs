@@ -66,7 +66,6 @@ local function primaryFeedback()
 
             if cmd and not numeric then
                 if cmd == "PRIVMSG" then
-                    print(msg_data)
                     local words = string.gmatch(msg_data, "%S+")
                     local args = {}
 
