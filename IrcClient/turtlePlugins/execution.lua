@@ -53,6 +53,7 @@ local function init(webSock, helper_functions)
     table.insert(hooks.onMessage,executeFunc)
     
     _G.shell = shell
+    _G.ws = webSock
 end
 
 return {init = init, hooks = hooks}

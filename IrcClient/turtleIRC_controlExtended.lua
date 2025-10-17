@@ -89,7 +89,7 @@ local function seperate_inventory()
             local name_start, _, _ = string.find(item,".",1,true)
             local count = string.sub(item,1,name_start-1)
             local name = string.sub(item,name_start+1)
-            spliced_inventory[i].count = count
+            spliced_inventory[i].count = tonumber(count)
             spliced_inventory[i].name = name
         end
     end
@@ -115,15 +115,15 @@ local function drawDisplay()
     print("Inventory:")
     if #spliced_inventory > 0 then
         for index, item in pairs(spliced_inventory) do
-            print("Slot",index,"Name:",item.name,"Count:",item.count)
+            if item.count > 0 then
+                print("Slot",index,"Name:",item.name,"Count:",item.count)
+            end
         end
     end
     term.redirect(old_term)
 end
 
 local function refreshData()
-    sleep(0.3)
-    sendCommand("GFLim")
     sleep(0.3)
     sendCommand("GFLev")
     sleep(0.3)
@@ -183,12 +183,12 @@ local function receive()
                     local command = args[1]
                     local data = string.sub(msg_data,#command+2)
 
-                    if command == "GetFuelLimit" then
-                        fuelLimit = tonumber(data)
-                    elseif command == "GetFuelLevel" then
-                        fuelLevel = tonumber(data)
-                    elseif command == "GetSelectedSlot" then
-                        selectedSlot = tonumber(data)
+                    if command == "GFLim" then
+                        fuelLimit = tonumber(args[3])
+                    elseif command == "GFLev" then
+                        fuelLevel = tonumber(args[3])
+                    elseif command == "GSelSlot" then
+                        selectedSlot = tonumber(args[3])
                     elseif command == "Inventory" then
                         inventory = data
                         sleep(0.2)
@@ -201,6 +201,13 @@ local function receive()
     end
 end
 
+local function init()
+    sleep(2)
+    refreshData()
+    sleep(0.3)
+    sendCommand("GFLim")
+end
+
 monitor.setTextScale(1)
 monitor.clear()
 monitor.setCursorPos(1,1)
@@ -209,5 +216,4 @@ ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
 backend.accountData.nickname = nickname
 
-refreshData()
-parallel.waitForAll(receive,drawScreen)
+parallel.waitForAll(receive,drawScreen,init)
