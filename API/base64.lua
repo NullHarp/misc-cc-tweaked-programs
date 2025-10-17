@@ -165,9 +165,9 @@ end
 ---@return string base64_char
 local function encode(char)
     if not lookup[char] then
-        error("Unsupported char found: "..char)
+        --error("Unsupported char found: "..char)
     end
-    return lookup[char]
+    return lookup[char] or "?"
 end
 
 ---Decodes a char from base64 into the number representing the char
