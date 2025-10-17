@@ -4,7 +4,7 @@ local test_data = "ABC"
 
 local function encode(data)
     local result = ""
-    local running_total = 2
+    local running_total = 1
     local last_char = " "
     for i = 1, #data+1 do
         local data_char = string.sub(data,i,i)
@@ -12,17 +12,15 @@ local function encode(data)
             running_total = running_total + 1
         elseif last_char ~= " " then
             local encoded_str = ""
-            if running_total == 64 then
-                encoded_str = "A/"
-            elseif running_total > 64 then
+            if running_total > 64 then
                 local len = math.floor(running_total/64)
                 local len_2 = running_total%64
-                encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
+                encoded_str = base64.encode(len)..base64.encode(len_2)
             else
                 encoded_str = "A"..base64.encode(running_total)
             end
             encoded_str = encoded_str .. last_char
-            running_total = 2
+            running_total = 1
             result = result .. encoded_str
         end
         last_char = data_char
