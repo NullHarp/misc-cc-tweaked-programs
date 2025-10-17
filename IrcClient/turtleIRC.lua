@@ -81,7 +81,7 @@ local function primaryFeedback()
                     local validCommand = true
                     local success = false
 
-                    if command and (origin_nick == "Null" or origin_nick == "turtleCont" or origin_nick == "turtleContExtd") then
+                    if command and (origin_nick == "Null" or origin_nick == "Controler" or origin_nick == "ControlerExtended") then
 
                         if command == "F" then
                             success = turtUtil.forward()

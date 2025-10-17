@@ -76,7 +76,7 @@ local function extendedCommands(message_data,sender)
         count = tonumber(data)
     end
 
-    if command and (sender == "Null" or sender == "turtleCont" or sender == "turtleContExtd") then
+    if command and (sender == "Null" or sender == "Controler" or sender == "ControlerExtended") then
         if generic_lookup[command] then
             local success, result,result2 = pcall(generic_lookup[command],count)
             if result2 then
