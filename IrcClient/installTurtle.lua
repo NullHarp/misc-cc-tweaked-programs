@@ -24,6 +24,7 @@ installFile("IrcClient/turtlePlugins/scanner.lua","plugins/scanner.lua")
 installFile("IrcClient/turtlePlugins/extendedFunctionality.lua","plugins/extendedFunctionality.lua")
 installFile("IrcClient/turtlePlugins/execution.lua","plugins/execution.lua")
 installFile("IrcClient/turtlePlugins/uninstall.lua","plugins/uninstall.lua")
+installFile("IrcClient/turtlePlugins/playerDetector.lua","plugins/playerDetector.lua")
 
 
 local file = fs.open("startup.lua","w")
