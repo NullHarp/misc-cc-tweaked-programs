@@ -17,7 +17,7 @@ local function encode(data)
                 local len_2 = running_total%64
                 encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
             else
-                encoded_str = "A"..base64.encode(running_total)
+                encoded_str = "A"..base64.encode(running_total+1)
             end
             encoded_str = encoded_str .. last_char
             running_total = 1
