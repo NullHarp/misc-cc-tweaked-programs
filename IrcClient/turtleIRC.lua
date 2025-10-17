@@ -81,32 +81,29 @@ local function primaryFeedback()
                     local validCommand = true
                     local success = false
 
-                    if command and (origin_nick == "Null" or origin_nick == "Controler" or origin_nick == "ControlerExtended") then
-
-                        if command == "F" then
-                            success = turtUtil.forward()
-                        elseif command == "B" then
-                            success = turtUtil.back()
-                        elseif command == "L" then
-                            success = turtUtil.turnLeft(true)
-                        elseif command == "R" then
-                            success = turtUtil.turnRight(true)
-                        elseif command == "U" then
-                            success = turtUtil.up()
-                        elseif command == "D" then
-                            success = turtUtil.down()
-                        elseif command == "Pos" then
-                            success = "x="..tostring(pos.x)..",y="..tostring(pos.y)..",z="..tostring(pos.z)..",dir="..tostring(dir)
-                        elseif command == "Stop" then
-                            ws.send("QUIT told to stop")
-                            ws.close()
-                            error("Program stopped!")
-                        else
-                            validCommand = false
-                        end
-                        if validCommand then
-                            helper.sendNotice(origin_nick,command.." "..tostring(success))
-                        end
+                    if command == "F" then
+                        success = turtUtil.forward()
+                    elseif command == "B" then
+                        success = turtUtil.back()
+                    elseif command == "L" then
+                        success = turtUtil.turnLeft(true)
+                    elseif command == "R" then
+                        success = turtUtil.turnRight(true)
+                    elseif command == "U" then
+                        success = turtUtil.up()
+                    elseif command == "D" then
+                        success = turtUtil.down()
+                    elseif command == "Pos" then
+                        success = "x="..tostring(pos.x)..",y="..tostring(pos.y)..",z="..tostring(pos.z)..",dir="..tostring(dir)
+                    elseif command == "Stop" then
+                        ws.send("QUIT told to stop")
+                        ws.close()
+                        error("Program stopped!")
+                    else
+                        validCommand = false
+                    end
+                    if validCommand then
+                        helper.sendNotice(origin_nick,command.." "..tostring(success))
                     end
                 end
             end
