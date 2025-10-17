@@ -103,7 +103,7 @@ local function primaryFeedback()
                     end
                     if validCommand then
                         if success then
-                            helper.sendNotice(origin_nick,command.." :SUCCESS "..success)
+                            helper.sendNotice(origin_nick,command.." :SUCCESS "..tostring(success))
                         else
                             helper.sendNotice(origin_nick,command.." :FAIL")
                         end
