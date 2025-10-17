@@ -22,7 +22,7 @@ local function encode(data)
                 encoded_str = "A"..base64.encode(running_total)
             end
             encoded_str = encoded_str .. last_char
-            running_total = 1
+            running_total = 2
             result = result .. encoded_str
         end
         last_char = data_char
