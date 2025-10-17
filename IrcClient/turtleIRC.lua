@@ -81,29 +81,32 @@ local function primaryFeedback()
                     local validCommand = true
                     local success = false
 
-                    if command == "F" then
-                        success = turtUtil.forward()
-                    elseif command == "B" then
-                        success = turtUtil.back()
-                    elseif command == "L" then
-                        success = turtUtil.turnLeft(true)
-                    elseif command == "R" then
-                        success = turtUtil.turnRight(true)
-                    elseif command == "U" then
-                        success = turtUtil.up()
-                    elseif command == "D" then
-                        success = turtUtil.down()
-                    elseif command == "Pos" then
-                        success = "x="..tostring(pos.x)..",y="..tostring(pos.y)..",z="..tostring(pos.z)..",dir="..tostring(dir)
-                    elseif command == "Stop" then
-                        ws.send("QUIT told to stop")
-                        ws.close()
-                        error("Program stopped!")
-                    else
-                        validCommand = false
-                    end
-                    if validCommand then
-                        helper.sendNotice(origin_nick,command.." "..tostring(success))
+                    if command and (origin_nick == "Null" or origin_nick == "turtleCont" or origin_nick == "turtleContExtd") then
+
+                        if command == "F" then
+                            success = turtUtil.forward()
+                        elseif command == "B" then
+                            success = turtUtil.back()
+                        elseif command == "L" then
+                            success = turtUtil.turnLeft(true)
+                        elseif command == "R" then
+                            success = turtUtil.turnRight(true)
+                        elseif command == "U" then
+                            success = turtUtil.up()
+                        elseif command == "D" then
+                            success = turtUtil.down()
+                        elseif command == "Pos" then
+                            success = "x="..tostring(pos.x)..",y="..tostring(pos.y)..",z="..tostring(pos.z)..",dir="..tostring(dir)
+                        elseif command == "Stop" then
+                            ws.send("QUIT told to stop")
+                            ws.close()
+                            error("Program stopped!")
+                        else
+                            validCommand = false
+                        end
+                        if validCommand then
+                            helper.sendNotice(origin_nick,command.." "..tostring(success))
+                        end
                     end
                 end
             end
@@ -117,7 +120,7 @@ local realname = "Hi, I am a bot!"
 
 ws.send("USER " .. username .. " unused unused " .. realname)
 ws.send("NICK " .. nickname)
-ws.send("MODE "..name.." +B")
+ws.send("MODE +B")
 backend.accountData.nickname = nickname
 
 initPlugins()
