@@ -12,13 +12,9 @@ local function encode(data)
             running_total = running_total + 1
         elseif last_char ~= " " then
             local encoded_str = ""
-            if running_total > 64 then
-                local len = math.floor(running_total/64)
-                local len_2 = running_total%64
-                encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
-            else
-                encoded_str = "A"..base64.encode(running_total+1)
-            end
+            local len = math.floor(running_total/64)
+            local len_2 = running_total%64
+            encoded_str = base64.encode(len+1)..base64.encode(len_2+1)
             encoded_str = encoded_str .. last_char
             running_total = 1
             result = result .. encoded_str
