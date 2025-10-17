@@ -4,7 +4,7 @@ local test_data = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 local function encode(data)
     local result = ""
-    local running_total = 1
+    local running_total = 2
     local last_char = " "
     for i = 1, #data+1 do
         local data_char = string.sub(data,i,i)
