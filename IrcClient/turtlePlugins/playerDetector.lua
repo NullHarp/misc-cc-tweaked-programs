@@ -26,8 +26,10 @@ local function useDetector(message_data,sender)
             local name = helper.getName()
             if type(args[2]) == "string" then
                 local data = playerDetector.getPlayerPos(args[2])
-                if #data > 0 then
-                    helper.sendMessage("Null","gPP :SUCCESS "..args[2].." "..tostring(data.x).." "..tostring(data.y).." "..tostring(data.z).." "..data.dimension)
+                if data then
+                    if data.x then
+                        helper.sendMessage("Null","gPP :SUCCESS "..args[2].." "..tostring(data.x).." "..tostring(data.y).." "..tostring(data.z).." "..data.dimension)
+                    end
                 else
                     helper.sendMessage("Null","gPP :FAIL "..args[2].." Player not found")
                 end
