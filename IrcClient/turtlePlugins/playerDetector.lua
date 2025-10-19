@@ -27,9 +27,9 @@ local function useDetector(message_data,sender)
             if type(args[2]) == "string" then
                 local data = playerDetector.getPlayerPos(args[2])
                 if data then
-                    helper.sendMessage("Null","gP :SUCCESS "..args[2].." "..tostring(data.x).." "..tostring(data.y).." "..tostring(data.z))
+                    helper.sendMessage("Null","gPP :SUCCESS "..args[2].." "..tostring(data.x).." "..tostring(data.y).." "..tostring(data.z).." "..data.dimension)
                 else
-                    helper.sendMessage("Null","gP :FAIL "..args[2].." Player not found")
+                    helper.sendMessage("Null","gPP :FAIL "..args[2].." Player not found")
                 end
             end
         elseif command == "lP" then -- list players
