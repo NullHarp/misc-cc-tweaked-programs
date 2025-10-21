@@ -67,8 +67,10 @@ local buttonToCommandMap = {
     suckDown = "SD 64"
 }
 
+local name = ...
+
 local function sendCommand(command)
-    ws.send("PRIVMSG Gumpai :"..command)
+    ws.send("PRIVMSG ".. name .. " :"..command)
     if debug_monitor then
         local old_term = term.redirect(debug_monitor)
         print(command)

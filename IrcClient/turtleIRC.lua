@@ -1,4 +1,9 @@
-local name = "Gumpai"
+local config_file = fs.open("config.json","r")
+local config_data = config_file.readAll()
+local config = textutils.unserialiseJSON(config_data)
+
+local name = config.name or error("Nick not setup")
+local password = config.password or false
 
 local backend = require("IRC_backend")
 local helper = backend.helper
@@ -63,6 +68,13 @@ local function primaryFeedback()
                 origin_client, origin_nick = backend.processMessageOrigin(message_origin)
             end
             executeHooks("onMessage",msg_data, origin_nick)
+
+
+            if password then
+                sleep(1)
+                ws.send("ns IDENTIFY "..password)
+                password = false
+            end
 
             if cmd and not numeric then
                 if cmd == "PRIVMSG" then
