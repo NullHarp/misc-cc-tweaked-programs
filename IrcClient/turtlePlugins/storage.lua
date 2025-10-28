@@ -10,7 +10,7 @@ local hooks = {
     }
 }
 
-local storageApi = nil
+local storageApi = require("storageAPI")
 
 local function interactStorage(message_data,sender)
     local words = string.gmatch(message_data, "%S+")
@@ -22,7 +22,7 @@ local function interactStorage(message_data,sender)
 
     local command = args[1]
     if command and sender == "Null" then
-        if command == "Search" then -- GetPlayerPos
+        if command == "Search" then -- Search
             local name = helper.getName()
             if type(args[2]) == "string" then
                 local search = args[2]
@@ -49,8 +49,6 @@ end
 local function init(webSock, helper_functions)
     ws = webSock
     helper = helper_functions
-
-    storageApi = require("storageAPI")
 
     print("Initalizing Storage plugin!")
     storageApi.refresh()

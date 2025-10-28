@@ -29,5 +29,14 @@ installFile("IrcClient/turtlePlugins/playerDetector.lua","plugins/playerDetector
 
 local file = fs.open("startup.lua","w")
 file.write("shell.run('turtleIRC.lua')")
+file.close()
+
+if not fs.exists("config.json") then
+    local config_file = fs.open("config.json","w")
+    local default_config = {name = "Gumpai"}
+    local default_config_json = textutils.serialiseJSON(default_config)
+    config_file.write(default_config_json)
+    config_file.close()
+end
 
 --os.reboot()
