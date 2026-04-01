@@ -23,11 +23,6 @@ local passwordHash = ""
 
 modem.open(serverChannel)
 
-local function generateTimestampHash()
-    local timestamp = math.floor(os.epoch("utc")/2000)
-    return sha2.hash256(passwordHash..timestamp..salt)
-end
-
 ---Sends a request to the server and awaits a response or timesout, whatever comes first
 ---@param request table Data containing the request to send to server
 ---@param response_type string What message type are we waiting for
@@ -43,7 +38,7 @@ local function sendRequest(request, response_type, timeout)
     end
     timeout = timeout or 5
     request.data = request.data or {}
-    request.data.tPasswordHash = generateTimestampHash()
+    request.data.passwordHash = passwordHash
     modem.transmit(serverChannel,serverChannel,request)
     sleep(0.1)
     local timerId = os.startTimer(timeout)
@@ -59,6 +54,7 @@ local function sendRequest(request, response_type, timeout)
         end
 
         if event == "modem_message" then
+            print(arg1,peripheral.getName(modem))
             if arg1 == peripheral.getName(modem) and arg2 == serverChannel and arg3 == serverChannel then
                 if type(arg4) == "table" then
                     local message = arg4
@@ -94,7 +90,7 @@ local function verifyAddress(address, password)
     if success then
         return msg.isValid
     else
-        return false
+        return false, msg
     end
 end
 

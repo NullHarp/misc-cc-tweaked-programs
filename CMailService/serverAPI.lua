@@ -139,7 +139,7 @@ local function translateFromAddress(address)
     end
 end
 
-local function authenticate(timestampedPasswordHash, address)
+local function authenticate(PasswordHash, address)
     local success, name, domain_name = translateFromAddress(address)
     if success then
         local file = fs.open(domain_name.."/"..name..".acc","r")
@@ -148,17 +148,10 @@ local function authenticate(timestampedPasswordHash, address)
         local account_tbl = textutils.unserialiseJSON(fileData)
         local password = account_tbl.password
         local hash = password.hash
-        local salt = password.salt
-        local timestamp = math.floor(os.epoch("utc")/2000)
-        local tPasswordHash = sha2.hash256(hash..timestamp..salt)
-        if timestampedPasswordHash == tPasswordHash then
+        print(PasswordHash," BREAK ",hash)
+        if PasswordHash == hash then
             return true
         else
-            timestamp = timestamp-1
-            tPasswordHash = sha2.hash256(hash..timestamp..salt)
-            if timestampedPasswordHash == tPasswordHash then
-                return true
-            end
             return false
         end
     else

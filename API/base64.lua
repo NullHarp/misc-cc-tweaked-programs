@@ -143,6 +143,9 @@ local function encodeTable(data)
         end
         res = res..lookup[num]
     end
+    if #res % 4 ~= 0 then
+        res = res .. string.rep("=",#res % 4)
+    end
     return res
 end
 
@@ -153,6 +156,7 @@ local function decodeString(data)
     local res = {}
     for char in string.gmatch(data, ".") do
         if not reverse_lookup[char] then
+            print(char)
             error("Unsupported char found: "..char)
         end
         table.insert(res,reverse_lookup[char])
@@ -175,6 +179,7 @@ end
 ---@return integer
 local function decode(base64_char)
     if not reverse_lookup[base64_char] then
+        print(base64_char)
         error("Unsupported char found: "..base64_char)
     end
     return reverse_lookup[base64_char]

@@ -384,7 +384,7 @@ local function exportItems(toChest, item_name, count, toSlot)
             end
         end
     end
-    return toTransfer > 0
+    return toTransfer == 0
 end
 
 ---Imports all items from all import_chests specified in the filter

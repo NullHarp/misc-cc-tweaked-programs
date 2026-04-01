@@ -18,12 +18,14 @@ local function main()
             local response = {
                 type = "addressValidity",
                 data = {
-                    isValid = server.authenticate(message.tPasswordHash,clientAddress)
+                    isValid = server.authenticate(message.passwordHash,clientAddress)
                 }
             }
+            sleep(0.05)
+            print(response.data.isValid)
             server.sendResponse(response,clientAddress)
             serverLog:writeLog("Sent addressValidity to: "..clientAddress,"DEBUG")
-        elseif server.authenticate(message.tPasswordHash, clientAddress) then
+        elseif server.authenticate(message.passwordHash, clientAddress) then
             if mType == "getMail" then
                 local hasMail, index = server.getMailIndex(clientAddress)
                 local response = {

@@ -4,4 +4,7 @@ API/token.txt
 Generic/getProgram.lua
 Modem/doorSpoof.lua
 Modem/thrusterHover.lua
-Private/
+Private/*
+Security/*
+Redstone\ Display/*
+Perseus\ SMP/*

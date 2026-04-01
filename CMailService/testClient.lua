@@ -3,7 +3,7 @@ local client = require("clientAPI")
 if os.getComputerID() ~= 23 then
     local success = client.setAddress("nullharp@cmail.co","test")
     if not success then
-        error("Invalid address.")
+        error("Something forgor.")
     end
     local message = read()
     client.sendEmail(message,"test@testing.co","Bobby's Love")
