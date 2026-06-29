@@ -11,11 +11,9 @@ local patternPayout = {
     { pattern = { "$", "\3", "\8" }, multiplier = 2 },
     { pattern = { "\1", "\2", "\3" }, multiplier = 1.5 },
     { pattern = { "\3", "\2", "\1" }, multiplier = 1.5 },
-    { pattern = { "\1", "\3", "\1" }, multiplier = 2 },
-    { pattern = { "\7", "\14", "\16" }, multiplier = 2.5 },
-    { pattern = { "\20", "\20", "\20" }, multiplier = 4 },
+    { pattern = { "\7", "\14", "\16" }, multiplier = 1.5 },
     { pattern = { "$", "$", "\21" }, multiplier = 3 },
-    { pattern = { "\8", "\8", "\8" }, multiplier = 3.5 },
+    { pattern = { "\8", "\8", "\8" }, multiplier = 1.5 },
     { pattern = { "$", "$", "*" }, multiplier = 2 },
     { pattern = { "*", "\3", "\8" }, multiplier = 2 }
 }
@@ -29,7 +27,7 @@ local iterator3 = 0
 ---0.05 expert
 ---0.10 normal
 ---0.15 easy
-local delay = 0.1
+local delay = 0.02
 monitor.clear()
 
 local function playMelody(melody)

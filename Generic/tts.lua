@@ -1,4 +1,4 @@
-local chat = peripheral.find("chatBox")
+local chat = peripheral.find("chat_box")
 local speaker = peripheral.find("speaker")
 local decoder = require("cc.audio.dfpwm").make_decoder()
 
@@ -7,7 +7,7 @@ print("Type your messages and tts will read them.")
 local voiceer = "en"
 local function main()
     while true do
-        local event, username, message, uuid, isHidden = os.pullEvent("chat")
+        local event, uuid, username, message, isHidden, messageUtf8 = os.pullEvent("chat")
         if username == "NullHarp" then
             print(message)
             local url = "https://music.madefor.cc/tts?text=" .. textutils.urlEncode(message).."&voice="..voiceer

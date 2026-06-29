@@ -1,4 +1,5 @@
 local modem = peripheral.find("modem")
+local payout = "numismaticoverhaul:silver_coin"
 
 modem.open(255)
 
@@ -26,7 +27,7 @@ local function findBet()
     local foundBet = false
     while not foundBet do
         local success, reason = turtle.suckUp()
-        local foundItem, count, slot = selectItem("numismatic-overhaul:gold_coin")
+        local foundItem, count, slot = selectItem(payout)
         if foundItem then
             if type(count) ~= "nil" and type(slot) ~= "nil" then
                 storage.importItems(turtle_name,slot,count)
@@ -63,13 +64,13 @@ end
 
 local function givePayout()
     if payoutCount > 0 then
-        if storage.getItemCount("numismatic-overhaul:gold_coin") >= payoutCount then
+        if storage.getItemCount(payout) >= payoutCount then
             for i = 1, payoutCount do
-                storage.exportItems(turtle_name,"numismatic-overhaul:gold_coin",1,1)
+                storage.exportItems(turtle_name,payout,1,1)
             end
         end
-        while selectItem("numismatic-overhaul:gold_coin") do
-            local foundItem, count, slot = selectItem("numismatic-overhaul:gold_coin")
+        while selectItem(payout) do
+            local foundItem, count, slot = selectItem(payout)
             if count > 64 then
                 count = 64                
             end

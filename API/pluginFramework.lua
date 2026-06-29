@@ -101,4 +101,4 @@ end
 
 --event.push("startup")
 
-return {event = event, plugin = plugin, api = api}
+return {event = event, plugin = plugin, api = api, registeredEvents = registeredEvents}

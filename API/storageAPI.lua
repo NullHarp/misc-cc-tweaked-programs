@@ -1,6 +1,6 @@
 local lev = require("levenshteinDistance")
 
-local chest_types = {"minecraft:chest","sc-goodies:iron_chest","sc-goodies:gold_chest","sc-goodies:diamond_chest"}
+local chest_types = {"minecraft:chest","sc-goodies:iron_chest","sc-goodies:gold_chest","sc-goodies:diamond_chest","create:item_vault"}
 
 local chests = {}
 local chest_names = {}
@@ -224,7 +224,7 @@ local function findItem(item_name,count,fuzzySearch)
         local item = item_index[i]
         if (item.name == item_name or (fuzzySearch and lev.levenshtein(item.name,item_name) < 3)) and item.count >= count then
             local real_data = chests[item_index[i].chest_index].getItemDetail(item.slot)
-            if real_data then
+            if not real_data then
                 table.remove(item_index,i)
                 break
             end
